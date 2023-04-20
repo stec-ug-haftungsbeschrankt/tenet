@@ -2,7 +2,7 @@ use std::{path::Path, fs::File, io::{Read, Write}};
 
 use crate::{Tenant, error::TenetError};
 
-#[derive(Debug, serde_derive::Serialize, serde_derive::Deserialize)]
+#[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize)]
 pub enum Storage {
     JsonFile {
         path: String
