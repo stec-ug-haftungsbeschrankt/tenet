@@ -28,20 +28,20 @@ impl Storage {
     pub fn read(&self) -> Result<Vec::<Tenant>, TenetError> {
         match self {
             Storage::JsonFile { path } => read_from_json_file(path),
-            Storage::SqliteDatabase { path } => todo!(),
-            Storage::PostgreSqlDatabase { connection_string } => todo!(),
-            Storage::PostgreSqlSchema { connection_string, schema_name } => todo!(),
-            Storage::PostgreSqlTablePrefix { connection_string, table_prefix } => todo!(),
+            Storage::SqliteDatabase { path } => read_from_sqlite_database(path),
+            Storage::PostgreSqlDatabase { connection_string } => read_from_postgresql_database(connection_string),
+            Storage::PostgreSqlSchema { connection_string, schema_name } => read_from_postgresql_database_schema(connection_string, schema_name),
+            Storage::PostgreSqlTablePrefix { connection_string, table_prefix } => read_from_postgresql_database_table_prefix(connection_string, table_prefix),
         }
     }
 
     pub fn write(&self, tenants: Vec<Tenant>) -> Result<(), TenetError> {
         match self {
             Storage::JsonFile { path } => write_to_json_file(path, tenants),
-            Storage::SqliteDatabase { path } => todo!(),
-            Storage::PostgreSqlDatabase { connection_string } => todo!(),
-            Storage::PostgreSqlSchema { connection_string, schema_name } => todo!(),
-            Storage::PostgreSqlTablePrefix { connection_string, table_prefix } => todo!(),
+            Storage::SqliteDatabase { path } => write_to_sqlite_database(path, tenants),
+            Storage::PostgreSqlDatabase { connection_string } => write_to_postgresql_database(connection_string, tenants),
+            Storage::PostgreSqlSchema { connection_string, schema_name } => write_to_postgresql_database_schema(connection_string, schema_name, tenants),
+            Storage::PostgreSqlTablePrefix { connection_string, table_prefix } => write_to_postgresql_database_table_prefix(connection_string, table_prefix, tenants),
         }
     }
 }
@@ -69,4 +69,53 @@ fn write_to_json_file<T>(path: T, tenants: Vec<Tenant>) -> Result<(), TenetError
     let mut file = File::open(path.into())?;
     file.write_all(&data.as_bytes())?;
     Ok(())
+}
+
+
+fn read_from_sqlite_database<T>(path: T) -> Result<Vec<Tenant>, TenetError> 
+    where T: Into<String> + Copy
+{
+    todo!()
+}
+
+fn write_to_sqlite_database<T>(path: T, tenants: Vec<Tenant>) -> Result<(), TenetError> 
+    where T: Into<String> + Copy
+{
+    todo!()
+}
+
+fn read_from_postgresql_database<T>(connection_string: T) -> Result<Vec<Tenant>, TenetError>
+    where T: Into<String> + Copy
+{
+    todo!()
+}
+
+fn write_to_postgresql_database<T>(connection_string: T, tenants: Vec<Tenant>) -> Result<(), TenetError>
+    where T: Into<String> + Copy
+{
+    todo!()
+}
+
+fn read_from_postgresql_database_schema<T>(connection_string: T, schema: T) -> Result<Vec<Tenant>, TenetError>
+    where T: Into<String> + Copy
+{
+    todo!()
+}
+
+fn write_to_postgresql_database_schema<T>(connection_string: T, schema: T, tenants: Vec<Tenant>) -> Result<(), TenetError>
+    where T: Into<String> + Copy
+{
+    todo!()
+}
+
+fn read_from_postgresql_database_table_prefix<T>(connection_string: T, table_prefix: T) -> Result<Vec<Tenant>, TenetError>
+    where T: Into<String> + Copy
+{
+    todo!()
+}
+
+fn write_to_postgresql_database_table_prefix<T>(connection_string: T, table_prefix: T, tenants: Vec<Tenant>) -> Result<(), TenetError>
+    where T: Into<String> + Copy
+{
+    todo!()
 }
