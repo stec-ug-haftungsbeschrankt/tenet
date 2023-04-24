@@ -16,14 +16,14 @@ use super::service_error::ServiceError;
 
 
 #[derive(Serialize, Deserialize, AsChangeset)]
-#[table_name = "tenants"]
+#[diesel(table_name = tenants)]
 pub struct DbTenantMessage {
     pub title: String,
 }
 
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
-#[table_name = "tenants"]
+#[diesel(table_name = tenants)]
 pub struct DbTenant {
     pub id: uuid::Uuid,
     pub title: String,

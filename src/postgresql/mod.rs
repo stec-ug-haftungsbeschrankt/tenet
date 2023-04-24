@@ -2,6 +2,7 @@ mod dbuser;
 mod dbtenant;
 mod dbapplication;
 mod dbrole;
+mod dbstorage;
 mod database;
 mod service_error;
 

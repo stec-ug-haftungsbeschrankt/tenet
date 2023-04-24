@@ -18,7 +18,7 @@ use crate::schema::users;
 
 
 #[derive(Serialize, Deserialize, PartialEq, AsChangeset)]
-#[table_name = "users"]
+#[diesel(table_name = users)]
 pub struct DbUserMessage {
     pub email: String,
     pub email_verified: bool,
@@ -30,8 +30,8 @@ pub struct DbUserMessage {
 
 
 #[derive(Debug, Serialize, Deserialize, Identifiable, Associations, PartialEq, Queryable, Insertable)]
-#[belongs_to(DbTenant)]
-#[table_name = "users"]
+#[diesel(belongs_to(DbTenant))]
+#[diesel(table_name = users)]
 pub struct DbUser {
     pub id: uuid::Uuid,
     pub email: String,
