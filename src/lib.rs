@@ -13,6 +13,7 @@ pub use role::*;
 pub use storage::*;
 pub use tenant::*;
 pub use user::*;
+use uuid::Uuid;
 
 
 #[derive(Debug, Clone)]
@@ -24,10 +25,20 @@ pub struct Tenet {
 
 impl Tenet {
     pub fn new(storage: Storage) -> Self {
+        let tenants = storage.read().unwrap();
+
         Tenet { 
             storage,
-            tenants: Vec::new() 
+            tenants 
         }
+    }
+
+    pub fn persist(&self) -> Result<(), TenetError> {
+        self.storage.write(&self.tenants)
+    }
+
+    fn get_tenant_ids(&self) -> Vec<Uuid> {
+        self.tenants.iter().map(|t| t.id).collect()
     }
 
     pub fn get_tenant_id_by_username(&self, username: String) -> Result<uuid::Uuid, TenetError> {
@@ -66,7 +77,7 @@ mod tests {
 
     #[test]
     fn test() -> Result<(), TenetError> {
-        let storage = Storage::JsonFile { path: "".to_string() };
+        let storage = Storage::JsonFile { path: "./test.json".to_string() };
         let mut tenet = Tenet::new(storage);
 
         let tenant = tenet.create_tenant()?;
@@ -79,15 +90,15 @@ mod tests {
         let application_id = tenant.add_application(application)?;
 
         let role = Role::new(user_id, application_id, RoleType::Administrator);
-        let role_id = tenant.add_role(role)?;
+        tenant.add_role(role)?;
 
         let application_storage2 = Storage::JsonFile { path: "".to_string() };
         let application2 = Application::new(application_storage2, ApplicationType::Shop);
-        let application2_id = tenant.add_application(application2)?;
+        tenant.add_application(application2)?;
 
         println!("{:?}", tenet);
 
-        Ok(())
+        tenet.persist()
 }
 
 }

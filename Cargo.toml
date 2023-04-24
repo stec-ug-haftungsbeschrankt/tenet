@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 thiserror = "1"
 uuid = { version = "*", features = ["v4", "serde"] }
+chrono = { version = "0.4.19", features = ["serde"] }
 serde = "*"
 serde_json = "*"
 serde_derive = "*"
