@@ -9,6 +9,19 @@ edition = "2021"
 thiserror = "1"
 uuid = { version = "*", features = ["v4", "serde"] }
 chrono = { version = "0.4.19", features = ["serde"] }
+
 serde = "*"
 serde_json = "*"
 serde_derive = "*"
+
+lazy_static = "1.4.0"
+r2d2 = "0.8.9"
+
+diesel = { version = "2.0", features = ["postgres", "r2d2", "uuid", "chrono"] }
+diesel_migrations = "2.0"
+
+rand = "0.8.3"
+rust-argon2 = "1.0.0"
+
+log = "*"
+simple_logger = "4.0"

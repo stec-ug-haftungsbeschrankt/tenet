@@ -1,4 +1,9 @@
 extern crate thiserror;
+extern crate diesel;
+#[macro_use] extern crate diesel_migrations;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate lazy_static;
+extern crate log;
 
 mod application;
 mod error;
@@ -7,14 +12,19 @@ mod storage;
 mod tenant;
 mod user;
 
+mod schema;
+mod postgresql;
+
 pub use application::*;
 pub use error::*;
 pub use role::*;
 pub use storage::*;
 pub use tenant::*;
 pub use user::*;
+
 use uuid::Uuid;
 
+pub static DEFAULT_DATABASE_URL: &str = "postgres://postgres:@localhost/stec_tenet";
 
 #[derive(Debug, Clone)]
 pub struct Tenet {
@@ -82,7 +92,7 @@ mod tests {
 
         let tenant = tenet.create_tenant()?;
 
-        let user = User::new("someone@someplace.de".to_string(), "Danny Crane".to_string(), "password".to_string(), EncryptionModes::Argon2);
+        let user = User::new("someone@someplace.de".to_string(), "Danny Crane".to_string(), "password".to_string(), EncryptionModes::Argon2, "someone@someplace.de".to_string(), false);
         let user_id = tenant.add_user(user)?;
 
         let application_storage = Storage::JsonFile { path: "".to_string() };

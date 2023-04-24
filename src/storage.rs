@@ -24,6 +24,7 @@ pub enum Storage {
     }
 }
 
+
 impl Storage {
     pub fn read(&self) -> Result<Vec::<Tenant>, TenetError> {
         match self {
