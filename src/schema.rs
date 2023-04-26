@@ -17,9 +17,9 @@ diesel::table! {
         role_type -> Text,
         user_id -> Nullable<Uuid>,
         application_id -> Nullable<Uuid>,
-        db_tenant_id -> Nullable<Uuid>,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
+        db_tenant_id -> Nullable<Uuid>,
     }
 }
 
