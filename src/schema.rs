@@ -26,7 +26,6 @@ diesel::table! {
 diesel::table! {
     storages (id) {
         id -> Uuid,
-        db_tenant_id -> Nullable<Uuid>,
         storage_type -> Text,
         path -> Nullable<Text>,
         connection_string -> Nullable<Text>,
@@ -34,6 +33,7 @@ diesel::table! {
         table_prefix -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
+        db_tenant_id -> Nullable<Uuid>,
     }
 }
 
