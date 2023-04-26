@@ -5,9 +5,9 @@ diesel::table! {
         id -> Uuid,
         application_type -> Text,
         storage_id -> Nullable<Uuid>,
-        db_tenant_id -> Nullable<Uuid>,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,
+        db_tenant_id -> Nullable<Uuid>,
     }
 }
 

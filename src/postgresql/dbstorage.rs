@@ -14,6 +14,20 @@ use super::dbtenant::DbTenant;
 use crate::schema::storages;
 
 
+#[derive(Serialize, Deserialize, PartialEq, AsChangeset)]
+#[diesel(belongs_to(DbTenant))]
+#[diesel(table_name = storages)]
+pub struct DbStorageMessage {
+    pub storage_type: String,
+    pub path: Option<String>,
+    pub connection_string: Option<String>,
+    pub schema: Option<String>,
+    pub table_prefix: Option<String>,
+    pub db_tenant_id: Option<uuid::Uuid>
+}
+
+
+
 
 #[derive(Debug, Serialize, Deserialize, Identifiable, Associations, PartialEq, Queryable, Insertable)]
 #[diesel(belongs_to(DbTenant))]

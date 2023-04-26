@@ -18,6 +18,7 @@ use crate::schema::users;
 
 
 #[derive(Serialize, Deserialize, PartialEq, AsChangeset)]
+#[diesel(belongs_to(DbTenant))]
 #[diesel(table_name = users)]
 pub struct DbUserMessage {
     pub email: String,

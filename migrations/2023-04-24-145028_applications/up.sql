@@ -17,8 +17,8 @@ CREATE TABLE "applications" (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     application_type TEXT NOT NULL,
     storage_id UUID references storages(id),
-    db_tenant_id UUID references tenants(id),
     created_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    db_tenant_id UUID references tenants(id)
 );
 
