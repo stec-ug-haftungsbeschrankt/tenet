@@ -26,7 +26,7 @@ pub struct DbUserMessage {
     pub password: String,
     pub encryption_mode: String,
     pub full_name: String,
-    pub db_tenant_id: uuid::Uuid
+    pub db_tenant_id: Option<uuid::Uuid>
 }
 
 
@@ -59,7 +59,7 @@ impl From<DbUserMessage> for DbUser {
             full_name: user.full_name,
             created_at: Utc::now().naive_utc(),
             updated_at: None,
-            db_tenant_id: Some(user.db_tenant_id)
+            db_tenant_id: user.db_tenant_id
         }
     }
 }

@@ -61,7 +61,7 @@ impl Tenet {
     pub fn get_tenant_by_username(&self, username: String) -> Result<Tenant, TenetError> {
         let user = DbUser::find_by_email(username).unwrap();
         if let Ok(tenant) = DbTenant::find(user.db_tenant_id.unwrap()) {
-            return Ok(Tenant::from(tenant));
+            return Ok(Tenant::from(&tenant));
         }
 
         Err(TenetError::NotFoundError)
@@ -69,7 +69,7 @@ impl Tenet {
 
     pub fn get_tenant_by_id(&self, tenant_id: uuid::Uuid) -> Option<Tenant> {
         if let Ok(db_tenant) = DbTenant::find(tenant_id) {
-            return Some(Tenant::from(db_tenant));
+            return Some(Tenant::from(&db_tenant));
         }
         None
     }
@@ -79,9 +79,9 @@ impl Tenet {
             title
         };
         let created_tenant = DbTenant::create(tenant_message)
-            .map_err(|e| TenetError::DatabaseError).unwrap();
+            .map_err(|e| TenetError::DatabaseError(e)).unwrap();
 
-        Ok(Tenant::from(created_tenant))
+        Ok(Tenant::from(&created_tenant))
     }
 
     pub fn delete_tenant(&mut self, tenant_id: uuid::Uuid) -> Result<(), TenetError> {
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn create_tenant_test() {
-        delete_tenants();
+        cleanup_database();
         
         let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn get_tenant_ids_test() {
-        delete_tenants();
+        cleanup_database();
 
         let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
@@ -162,9 +162,25 @@ mod tests {
 
     #[test]
     fn create_user() {
+        cleanup_database();
+
         let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
-        let tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
+        let mut tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
+
+        let user = User::new(
+            "someone@something.de".to_string(),
+            "Danny Crane".to_string(), 
+            "password".to_string(), 
+            EncryptionModes::Argon2, 
+            "someone@something.de".to_string(), 
+            true, 
+            tenant.id);
+
+        let created_user = tenant.add_user(&user).unwrap();
+
+        assert_eq!(user.username, created_user.username);
+
 
         todo!();
         //tenant.create_user();
@@ -174,11 +190,20 @@ mod tests {
         // assert user was returned
     }
 
-    fn delete_tenants() {
+
+    fn cleanup_database() {
         let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
-        for tenant in tenet.get_tenant_ids() {
-            tenet.delete_tenant(tenant);
+        for tenant_id in tenet.get_tenant_ids() {
+
+            let tenant = tenet.get_tenant_by_id(tenant_id).unwrap();
+
+            let users = tenant.get_users();
+            for user in users {
+                tenant.delete_user(user.id);
+            }
+
+            tenet.delete_tenant(tenant_id);
         }
     }
 

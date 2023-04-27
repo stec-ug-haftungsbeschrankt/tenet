@@ -1,6 +1,8 @@
+use std::clone;
+
 use chrono::{Utc, NaiveDateTime};
 
-use crate::{error::TenetError, application::Application, role::Role, user::User, postgresql::dbtenant::DbTenant};
+use crate::{error::TenetError, application::Application, role::Role, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}}};
 
 
 #[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
@@ -11,11 +13,11 @@ pub struct Tenant {
     pub updated_at: Option<NaiveDateTime>
 }
 
-impl From<DbTenant> for Tenant {
-    fn from(value: DbTenant) -> Self {
+impl From<&DbTenant> for Tenant {
+    fn from(value: &DbTenant) -> Self {
         Tenant { 
             id: value.id, 
-            title: value.title,
+            title: value.title.clone(),
             created_at: value.created_at, 
             updated_at: value.updated_at 
         }
@@ -31,18 +33,37 @@ impl Tenant {
             updated_at: None
         }
     }
+
+    pub fn get_users(&self) -> Vec<User> {
+        if let Ok(db_users) = DbUser::find_by_tenant(self.id) {
+            return db_users.iter().map(|u| User::from(u)).collect();
+        }
+        Vec::new()
+    }
+
+    pub fn add_user(&self, user: &User) -> Result<User, TenetError> {
+        let user_message = DbUserMessage {
+            email: user.email.clone(),
+            email_verified: user.email_verified,
+            password: user.password.clone(),
+            encryption_mode: user.encryption_mode.to_string(),
+            full_name: user.full_name.clone(),
+            db_tenant_id: user.db_tenant_id
+        };
+        let created_user = DbUser::create(user_message)
+            .map_err(|e| TenetError::DatabaseError(e)).unwrap();
+
+        Ok(User::from(&created_user))
+    }
+
+    pub fn delete_user(&self, user_id: uuid::Uuid) -> Result<(), TenetError> {
+        if let Err(e) = DbUser::delete(user_id) {
+            return Err(TenetError::DatabaseError(e));
+        }
+        Ok(())
+    }
+
 /* 
-    pub fn get_users(&self) -> &Vec<User> {
-        &self.users
-    }
-
-    pub fn add_user(&mut self, user: User) -> Result<uuid::Uuid, TenetError>{
-        self.users.push(user);
-        self.updated_at = Some(Utc::now().naive_utc());
-
-        Ok(self.users.last().unwrap().id)
-    }
-
     pub fn remove_user(&mut self, user_id: uuid::Uuid) -> Result<User, TenetError> {
         if let Some(index) = self.users.iter().position(|u| u.id == user_id) {
             let user = self.users.remove(index);

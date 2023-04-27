@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{str::FromStr, fmt::Display};
 
 use chrono::{NaiveDateTime, Utc};
 
@@ -20,16 +20,16 @@ pub struct User {
 }
 
 
-impl From<DbUser> for User {
-    fn from(value: DbUser) -> Self {
+impl From<&DbUser> for User {
+    fn from(value: &DbUser) -> Self {
         User { 
             id: value.id, 
             username: value.email.clone(), // We do not have a concept of username at the moment, we just use email
-            password:value.password, 
+            password: value.password.clone(), 
             encryption_mode: EncryptionModes::from_str(&value.encryption_mode).unwrap(), 
-            email: value.email, 
+            email: value.email.clone(), 
             email_verified: value.email_verified, 
-            full_name: value.full_name ,
+            full_name: value.full_name.clone(),
             created_at: value.created_at,
             updated_at: value.updated_at,
             db_tenant_id: value.db_tenant_id,
@@ -52,6 +52,12 @@ impl FromStr for EncryptionModes {
             "Argon2"  => Ok(EncryptionModes::Argon2),
             _      => Err(()),
         }
+    }
+}
+
+impl Display for EncryptionModes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 

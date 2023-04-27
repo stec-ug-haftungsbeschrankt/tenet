@@ -8,10 +8,10 @@ pub enum TenetError {
     IoError(#[from] std::io::Error),
     #[error("Serialization or Deserialization failed")]
     SerializationError(#[from] serde_json::Error),
-    #[error("Database Error")]
-    DatabaseError,
+    #[error("Database Error: {} - {}", .0.status_code, .0.message)]
+    DatabaseError(ServiceError),
     #[error("Not found")]
-    NotFoundError
+    NotFoundError,
 }
 
 
