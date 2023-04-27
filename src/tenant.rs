@@ -1,8 +1,6 @@
-use std::clone;
-
 use chrono::{Utc, NaiveDateTime};
 
-use crate::{error::TenetError, application::Application, role::Role, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}}};
+use crate::{error::TenetError, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}}};
 
 
 #[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
@@ -50,16 +48,13 @@ impl Tenant {
             full_name: user.full_name.clone(),
             db_tenant_id: user.db_tenant_id
         };
-        let created_user = DbUser::create(user_message)
-            .map_err(|e| TenetError::DatabaseError(e)).unwrap();
+        let created_user = DbUser::create(user_message)?;
 
         Ok(User::from(&created_user))
     }
 
     pub fn delete_user(&self, user_id: uuid::Uuid) -> Result<(), TenetError> {
-        if let Err(e) = DbUser::delete(user_id) {
-            return Err(TenetError::DatabaseError(e));
-        }
+        DbUser::delete(user_id)?;
         Ok(())
     }
 

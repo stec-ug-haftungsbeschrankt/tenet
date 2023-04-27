@@ -8,9 +8,9 @@ use diesel::{
 };
 use diesel::prelude::*;
 
-use super::service_error::ServiceError;
 use super::database;
 use super::dbtenant::DbTenant;
+use crate::TenetError;
 use crate::schema::applications;
 
 
@@ -53,25 +53,25 @@ impl From<DbApplicationMessage> for DbApplication {
 
 
 impl DbApplication {
-    pub fn find_all() -> Result<Vec<Self>, ServiceError> {
+    pub fn find_all() -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
         let applications = applications::table.load::<DbApplication>(&mut connection)?;
         Ok(applications)
     }
 
-    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, ServiceError> {
+    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
         let applications = applications::table.filter(applications::db_tenant_id.eq(id)).load(&mut connection)?;
         Ok(applications)
     }
 
-    pub fn find(id: Uuid) -> Result<Self, ServiceError> {
+    pub fn find(id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
         let application = applications::table.filter(applications::id.eq(id)).first(&mut connection)?;
         Ok(application)
     }
 
-    pub fn create(application: DbApplicationMessage) -> Result<Self, ServiceError> {
+    pub fn create(application: DbApplicationMessage) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
 
         let new_application = DbApplication::from(application);
@@ -82,7 +82,7 @@ impl DbApplication {
         Ok(db_application)
     }
 
-    pub fn update(id: Uuid, application: DbApplicationMessage) -> Result<Self, ServiceError> {
+    pub fn update(id: Uuid, application: DbApplicationMessage) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
 
         let updated_application = diesel::update(applications::table)
@@ -92,7 +92,7 @@ impl DbApplication {
         Ok(updated_application)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, ServiceError> {
+    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
         let mut connection = database::connection()?;
 
         let result = diesel::delete(

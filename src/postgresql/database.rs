@@ -7,7 +7,6 @@ use std::env;
 use diesel_migrations::EmbeddedMigrations;
 use crate::diesel_migrations::MigrationHarness;
 use crate::DEFAULT_DATABASE_URL;
-use crate::postgresql::service_error::ServiceError;
 
 type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
@@ -40,7 +39,6 @@ pub fn initialize_database() {
 }
 
 
-pub fn connection() -> Result<DbConnection, ServiceError> {
-    POOL.get().map_err(
-        |e| ServiceError::new(500, format!("Failed to get database connection: {}", e)))
+pub fn connection() -> Result<DbConnection, r2d2::Error> {
+    POOL.get()
 }

@@ -10,9 +10,9 @@ use diesel::prelude::*;
 use argon2::Config;
 use rand::Rng;
 
-use super::service_error::ServiceError;
 use super::database;
 use super::dbtenant::DbTenant;
+use crate::TenetError;
 use crate::schema::users;
 
 
@@ -66,32 +66,32 @@ impl From<DbUserMessage> for DbUser {
 
 
 impl DbUser {
-    pub fn find_all() -> Result<Vec<Self>, ServiceError> {
+    pub fn find_all() -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
         let users = users::table.load::<DbUser>(&mut connection)?;
         Ok(users)
     }
 
 
-    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, ServiceError> {
+    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
         let users = users::table.filter(users::db_tenant_id.eq(id)).load(&mut connection)?;
         Ok(users)
     }
 
-    pub fn find(id: Uuid) -> Result<Self, ServiceError> {
+    pub fn find(id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
         let user = users::table.filter(users::id.eq(id)).first(&mut connection)?;
         Ok(user)
     }
 
-    pub fn find_by_email(email: String) -> Result<Self, ServiceError> {
+    pub fn find_by_email(email: String) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
         let user = users::table.filter(users::email.eq(email)).first(&mut connection)?;
         Ok(user)
     }
 
-    pub fn create(user: DbUserMessage) -> Result<Self, ServiceError> {
+    pub fn create(user: DbUserMessage) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
 
         let mut new_user = DbUser::from(user);
@@ -103,7 +103,7 @@ impl DbUser {
         Ok(db_user)
     }
 
-    pub fn update(id: Uuid, user: DbUserMessage) -> Result<Self, ServiceError> {
+    pub fn update(id: Uuid, user: DbUserMessage) -> Result<Self, TenetError> {
         let mut conn = database::connection()?;
 
         let user = diesel::update(users::table)
@@ -113,7 +113,7 @@ impl DbUser {
         Ok(user)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, ServiceError> {
+    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
         let mut conn = database::connection()?;
 
         let res = diesel::delete(
@@ -123,18 +123,17 @@ impl DbUser {
         Ok(res)
     }
 
-    fn hash_password(&mut self) -> Result<(), ServiceError> {
+    fn hash_password(&mut self) -> Result<(), TenetError> {
         let salt: [u8; 32] = rand::thread_rng().gen();
         let config = Config::default();
 
-        self.password = argon2::hash_encoded(self.password.as_bytes(), &salt, &config)
-            .map_err(|e| ServiceError::new(500, format!("Failed to hash password: {}", e)))?;
+        self.password = argon2::hash_encoded(self.password.as_bytes(), &salt, &config)?;
 
         Ok(())
     }
 
-    pub fn verify_password(&self, password: &str) -> Result<bool, ServiceError> {
-        argon2::verify_encoded(&self.password, password.as_bytes())
-            .map_err(|e| ServiceError::new(500, format!("Failed to verify password: {}", e)))
+    pub fn verify_password(&self, password: &str) -> Result<bool, TenetError> {
+        Ok(argon2::verify_encoded(&self.password, password.as_bytes())?)
     }
+
 }

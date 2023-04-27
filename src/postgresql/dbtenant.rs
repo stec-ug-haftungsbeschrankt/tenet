@@ -9,10 +9,9 @@ use diesel::{
 };
 use diesel::prelude::*;
 
+use crate::TenetError;
 use crate::schema::tenants;
 use super::database;
-use super::service_error::ServiceError;
-
 
 
 #[derive(Serialize, Deserialize, AsChangeset)]
@@ -45,25 +44,25 @@ impl From<DbTenantMessage> for DbTenant {
 
 
 impl DbTenant {
-    pub fn find_all() -> Result<Vec<Self>, ServiceError> {
+    pub fn find_all() -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
         let tenants = tenants::table.load::<DbTenant>(&mut connection)?;
         Ok(tenants)
     }
 
-    pub fn find(id: Uuid) -> Result<Self, ServiceError> {
+    pub fn find(id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
         let tenant = tenants::table.filter(tenants::id.eq(id)).first(&mut connection)?;
         Ok(tenant)
     }
 
-    pub fn find_by_title(title: String) -> Result<Self, ServiceError> {
+    pub fn find_by_title(title: String) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
         let tenant = tenants::table.filter(tenants::title.eq(title)).first(&mut connection)?;
         Ok(tenant)
     }
 
-    pub fn create(tenant: DbTenantMessage) -> Result<Self, ServiceError> {
+    pub fn create(tenant: DbTenantMessage) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
 
         let new_tenant = DbTenant::from(tenant);
@@ -74,7 +73,7 @@ impl DbTenant {
         Ok(db_tenant)
     }
 
-    pub fn update(id: Uuid, tenant: DbTenantMessage) -> Result<Self, ServiceError> {
+    pub fn update(id: Uuid, tenant: DbTenantMessage) -> Result<Self, TenetError> {
         let mut conn = database::connection()?;
 
         let db_tenant = diesel::update(tenants::table)
@@ -84,7 +83,7 @@ impl DbTenant {
         Ok(db_tenant)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, ServiceError> {
+    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
         let mut connection = database::connection()?;
 
         let res = diesel::delete(

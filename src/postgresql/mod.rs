@@ -4,7 +4,6 @@ pub mod dbapplication;
 pub mod dbrole;
 pub mod dbstorage;
 pub mod database;
-pub mod service_error;
 
 /*
 use crate::postgresql::usertenants::user_tenant_service::user_tenant_service_server::UserTenantService;

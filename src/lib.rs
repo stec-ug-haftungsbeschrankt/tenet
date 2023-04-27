@@ -78,14 +78,13 @@ impl Tenet {
         let tenant_message = DbTenantMessage {
             title
         };
-        let created_tenant = DbTenant::create(tenant_message)
-            .map_err(|e| TenetError::DatabaseError(e)).unwrap();
+        let created_tenant = DbTenant::create(tenant_message)?;
 
         Ok(Tenant::from(&created_tenant))
     }
 
     pub fn delete_tenant(&mut self, tenant_id: uuid::Uuid) -> Result<(), TenetError> {
-        DbTenant::delete(tenant_id);
+        DbTenant::delete(tenant_id)?;
         Ok(())
     }
 }

@@ -8,9 +8,9 @@ use diesel::{
 };
 use diesel::prelude::*;
 
-use super::service_error::ServiceError;
 use super::database;
 use super::dbtenant::DbTenant;
+use crate::TenetError;
 use crate::schema::roles;
 
 
@@ -40,8 +40,6 @@ pub struct DbRole {
 }
 
 
-
-
 impl From<DbRoleMessage> for DbRole {
     fn from(role: DbRoleMessage) -> Self {
         DbRole {
@@ -59,25 +57,25 @@ impl From<DbRoleMessage> for DbRole {
 
 
 impl DbRole {
-    pub fn find_all() -> Result<Vec<Self>, ServiceError> {
+    pub fn find_all() -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
         let roles = roles::table.load::<DbRole>(&mut connection)?;
         Ok(roles)
     }
 
-    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, ServiceError> {
+    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
         let roles = roles::table.filter(roles::db_tenant_id.eq(id)).load(&mut connection)?;
         Ok(roles)
     }
 
-    pub fn find(id: Uuid) -> Result<Self, ServiceError> {
+    pub fn find(id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
         let role = roles::table.filter(roles::id.eq(id)).first(&mut connection)?;
         Ok(role)
     }
 
-    pub fn create(role: DbRoleMessage) -> Result<Self, ServiceError> {
+    pub fn create(role: DbRoleMessage) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
 
         let new_role = DbRole::from(role);
@@ -88,7 +86,7 @@ impl DbRole {
         Ok(db_role)
     }
 
-    pub fn update(id: Uuid, role: DbRoleMessage) -> Result<Self, ServiceError> {
+    pub fn update(id: Uuid, role: DbRoleMessage) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
 
         let updated_role = diesel::update(roles::table)
@@ -98,7 +96,7 @@ impl DbRole {
         Ok(updated_role)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, ServiceError> {
+    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
         let mut connection = database::connection()?;
 
         let result = diesel::delete(
