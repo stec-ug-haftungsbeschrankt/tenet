@@ -179,14 +179,15 @@ mod tests {
         let created_user = tenant.add_user(&user).unwrap();
 
         assert_eq!(user.username, created_user.username);
+        assert_eq!(user.full_name, created_user.full_name);
+        assert_eq!(user.encryption_mode, created_user.encryption_mode);
+        assert_eq!(user.email, created_user.email);
+        assert_eq!(user.email_verified, created_user.email_verified);
+        assert_eq!(user.db_tenant_id, created_user.db_tenant_id);
 
-
-        todo!();
-        //tenant.create_user();
-        // Assert user was created 
-
-        // get user by id
-        // assert user was returned
+        let get_user = tenant.get_user_by_id(created_user.id).unwrap();
+        
+        assert_eq!(created_user.id, get_user.id);
     }
 
 

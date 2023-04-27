@@ -39,6 +39,13 @@ impl Tenant {
         Vec::new()
     }
 
+    pub fn get_user_ids(&self) -> Vec<uuid::Uuid> {
+        if let Ok(users) = DbUser::find_all() {
+            return users.iter().map(|u| u.id).collect();
+        }
+        Vec::new()
+    }
+
     pub fn add_user(&self, user: &User) -> Result<User, TenetError> {
         let user_message = DbUserMessage {
             email: user.email.clone(),
@@ -51,6 +58,11 @@ impl Tenant {
         let created_user = DbUser::create(user_message)?;
 
         Ok(User::from(&created_user))
+    }
+
+    pub fn get_user_by_id(&self, user_id: uuid::Uuid) -> Result<User, TenetError> {
+        let user = DbUser::find(user_id)?;
+        Ok(User::from(&user))
     }
 
     pub fn delete_user(&self, user_id: uuid::Uuid) -> Result<(), TenetError> {

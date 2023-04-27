@@ -38,7 +38,7 @@ impl From<&DbUser> for User {
 }
 
 
-#[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize)]
+#[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
 pub enum EncryptionModes {
     Argon2
 }
