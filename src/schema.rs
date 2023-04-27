@@ -52,6 +52,7 @@ diesel::table! {
         email -> Text,
         email_verified -> Bool,
         password -> Text,
+        encryption_mode -> Text,
         full_name -> Text,
         created_at -> Timestamp,
         updated_at -> Nullable<Timestamp>,

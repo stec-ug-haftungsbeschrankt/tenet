@@ -17,7 +17,7 @@ pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 lazy_static! {
     static ref POOL: Pool = {
-        let db_url = match env::var("DATABASE_URL") {
+        let db_url = match env::var("TENET_DATABASE_URL") {
             Ok(url) => url,
             Err(err) => {
                 info!("{}", err.to_string());

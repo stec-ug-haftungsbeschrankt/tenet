@@ -1,10 +1,10 @@
-mod dbuser;
-mod dbtenant;
-mod dbapplication;
-mod dbrole;
-mod dbstorage;
-mod database;
-mod service_error;
+pub mod dbuser;
+pub mod dbtenant;
+pub mod dbapplication;
+pub mod dbrole;
+pub mod dbstorage;
+pub mod database;
+pub mod service_error;
 
 /*
 use crate::postgresql::usertenants::user_tenant_service::user_tenant_service_server::UserTenantService;

@@ -24,6 +24,7 @@ pub struct DbUserMessage {
     pub email: String,
     pub email_verified: bool,
     pub password: String,
+    pub encryption_mode: String,
     pub full_name: String,
     pub db_tenant_id: uuid::Uuid
 }
@@ -39,6 +40,7 @@ pub struct DbUser {
     pub email_verified: bool,
     #[serde(skip_serializing)]
     pub password: String,
+    pub encryption_mode: String,
     pub full_name: String,
     pub created_at: NaiveDateTime,
     pub updated_at: Option<NaiveDateTime>,
@@ -53,6 +55,7 @@ impl From<DbUserMessage> for DbUser {
             email: user.email,
             email_verified: user.email_verified,
             password: user.password,
+            encryption_mode: user.encryption_mode,
             full_name: user.full_name,
             created_at: Utc::now().naive_utc(),
             updated_at: None,

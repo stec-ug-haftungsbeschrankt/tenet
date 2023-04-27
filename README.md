@@ -1,8 +1,11 @@
 # tenet
 
-Tenant and usermangement written in rust
+Tenant, application and user mangement written in rust
 
 
+The data of this service is stored in a postgresql database.
 
 
-Persist has to be called explicitly to write data to file or database.
+URL Schema to access application
+
+> https://apps.stecug.de/<tenant-id>/<application-id>

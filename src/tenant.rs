@@ -1,32 +1,37 @@
 use chrono::{Utc, NaiveDateTime};
 
-use crate::{error::TenetError, application::Application, role::Role, user::User};
+use crate::{error::TenetError, application::Application, role::Role, user::User, postgresql::dbtenant::DbTenant};
 
 
-
-
-#[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize)]
+#[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
 pub struct Tenant {
     pub id: uuid::Uuid,
-    users: Vec::<User>,
-    applications: Vec<Application>,
-    roles: Vec<Role>,
-    created_at: NaiveDateTime,
-    updated_at: Option<NaiveDateTime>
+    pub title: String,
+    pub created_at: NaiveDateTime,
+    pub updated_at: Option<NaiveDateTime>
+}
+
+impl From<DbTenant> for Tenant {
+    fn from(value: DbTenant) -> Self {
+        Tenant { 
+            id: value.id, 
+            title: value.title,
+            created_at: value.created_at, 
+            updated_at: value.updated_at 
+        }
+    }
 }
 
 impl Tenant {
-    pub fn new() -> Self {
+    pub fn new(title: String) -> Self {
         Tenant { 
             id: uuid::Uuid::new_v4(), 
-            users: Vec::new(),
-            applications: Vec::new(),
-            roles: Vec::new(),
+            title,
             created_at: Utc::now().naive_utc(),
             updated_at: None
         }
     }
-
+/* 
     pub fn get_users(&self) -> &Vec<User> {
         &self.users
     }
@@ -90,4 +95,5 @@ impl Tenant {
         }
         Err(TenetError::NotFoundError)
     }
+    */
 }
