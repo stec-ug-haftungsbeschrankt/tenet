@@ -1,6 +1,6 @@
 use chrono::{Utc, NaiveDateTime};
 
-use crate::{error::TenetError, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}}};
+use crate::{error::TenetError, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}, dbapplication::DbApplication, dbrole::DbRole}, Application, Role};
 
 
 #[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
@@ -74,11 +74,15 @@ impl Tenant {
         DbUser::find_by_tenant_and_email(self.id, username).is_ok()
     }
 
-    /*
-    pub fn get_applications(&self) -> &Vec<Application> {
-        &self.applications
+
+    pub fn get_applications(&self) -> Vec<Application> {
+        if let Ok(applications) = DbApplication::find_by_tenant(self.id) {
+            return applications.iter().map(|a| Application::from(a)).collect();
+        }
+        Vec::new()      
     }
 
+/*
     pub fn add_application(&mut self, application: Application) -> Result<uuid::Uuid, TenetError> {
         self.applications.push(application);
         self.updated_at = Some(Utc::now().naive_utc());
@@ -94,11 +98,14 @@ impl Tenant {
         }
         Err(TenetError::NotFoundError)
     }
-
-    pub fn get_roles(&self) -> &Vec<Role> {
-        &self.roles
+*/
+    pub fn get_roles(&self) -> Vec<Role> {
+        if let Ok(roles) = DbRole::find_by_tenant(self.id) {
+            return roles.iter().map(|r| Role::from(r)).collect();
+        }
+        Vec::new()
     }
-
+/*
     pub fn add_role(&mut self, role: Role) -> Result<uuid::Uuid, TenetError> {
         self.roles.push(role);
         self.updated_at = Some(Utc::now().naive_utc());

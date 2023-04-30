@@ -6,8 +6,10 @@ extern crate diesel;
 extern crate log;
 
 mod application;
+mod application_type;
 mod error;
 mod role;
+mod role_type;
 mod storage;
 mod tenant;
 mod user;
@@ -93,7 +95,7 @@ impl Tenet {
 
 #[cfg(test)]
 mod tests {
-    use crate::{application::{Application, ApplicationType}, role::{RoleType, Role}, user::{User, EncryptionModes}};
+    use crate::user::{User, EncryptionModes};
 
     use super::*;
 /* 
