@@ -34,7 +34,7 @@ impl Tenant {
 
     pub fn get_users(&self) -> Vec<User> {
         if let Ok(db_users) = DbUser::find_by_tenant(self.id) {
-            return db_users.iter().map(|u| User::from(u)).collect();
+            return db_users.iter().map(User::from).collect();
         }
         Vec::new()
     }
@@ -77,7 +77,7 @@ impl Tenant {
 
     pub fn get_applications(&self) -> Vec<Application> {
         if let Ok(applications) = DbApplication::find_by_tenant(self.id) {
-            return applications.iter().map(|a| Application::from(a)).collect();
+            return applications.iter().map(Application::from).collect();
         }
         Vec::new()      
     }
@@ -105,7 +105,7 @@ impl Tenant {
 
     pub fn get_roles(&self) -> Vec<Role> {
         if let Ok(roles) = DbRole::find_by_tenant(self.id) {
-            return roles.iter().map(|r| Role::from(r)).collect();
+            return roles.iter().map(Role::from).collect();
         }
         Vec::new()
     }

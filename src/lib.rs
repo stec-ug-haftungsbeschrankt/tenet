@@ -39,7 +39,7 @@ pub struct Tenet { }
 
 impl Tenet {
     pub fn new(connection_string: String) -> Self {
-        env::set_var("TENET_DATABASE_URL", &connection_string);
+        env::set_var("TENET_DATABASE_URL", connection_string);
         initialize_database();
 
         Tenet { }
