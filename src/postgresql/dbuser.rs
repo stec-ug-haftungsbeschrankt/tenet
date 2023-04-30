@@ -66,28 +66,35 @@ impl From<DbUserMessage> for DbUser {
 
 
 impl DbUser {
-    pub fn find_all() -> Result<Vec<Self>, TenetError> {
+    pub fn find_by_tenant(tenant_id: Uuid) -> Result<Vec<Self>, TenetError> {
         let mut connection = database::connection()?;
-        let users = users::table.load::<DbUser>(&mut connection)?;
+        let users = users::table.filter(users::db_tenant_id.eq(tenant_id)).load(&mut connection)?;
         Ok(users)
     }
 
-
-    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, TenetError> {
+    pub fn find(tenant_id: uuid::Uuid, user_id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
-        let users = users::table.filter(users::db_tenant_id.eq(id)).load(&mut connection)?;
-        Ok(users)
-    }
-
-    pub fn find(id: Uuid) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
-        let user = users::table.filter(users::id.eq(id)).first(&mut connection)?;
+        let user = users::table
+            .filter(users::id.eq(user_id))
+            .filter(users::db_tenant_id.eq(tenant_id))
+            .first(&mut connection)?;
         Ok(user)
     }
 
     pub fn find_by_email(email: String) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
-        let user = users::table.filter(users::email.eq(email)).first(&mut connection)?;
+        let user = users::table
+            .filter(users::email.eq(email))
+            .first(&mut connection)?;
+        Ok(user)
+    }
+
+    pub fn find_by_tenant_and_email(tenant_id: uuid::Uuid, email: String) -> Result<Self, TenetError> {
+        let mut connection = database::connection()?;
+        let user = users::table
+            .filter(users::db_tenant_id.eq(tenant_id))
+            .filter(users::email.eq(email))
+            .first(&mut connection)?;
         Ok(user)
     }
 

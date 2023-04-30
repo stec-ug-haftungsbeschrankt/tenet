@@ -40,7 +40,7 @@ impl Tenant {
     }
 
     pub fn get_user_ids(&self) -> Vec<uuid::Uuid> {
-        if let Ok(users) = DbUser::find_all() {
+        if let Ok(users) = DbUser::find_by_tenant(self.id) {
             return users.iter().map(|u| u.id).collect();
         }
         Vec::new()
@@ -61,7 +61,7 @@ impl Tenant {
     }
 
     pub fn get_user_by_id(&self, user_id: uuid::Uuid) -> Result<User, TenetError> {
-        let user = DbUser::find(user_id)?;
+        let user = DbUser::find(self.id, user_id)?;
         Ok(User::from(&user))
     }
 
@@ -70,20 +70,11 @@ impl Tenant {
         Ok(())
     }
 
-/* 
-    pub fn remove_user(&mut self, user_id: uuid::Uuid) -> Result<User, TenetError> {
-        if let Some(index) = self.users.iter().position(|u| u.id == user_id) {
-            let user = self.users.remove(index);
-            self.updated_at = Some(Utc::now().naive_utc());
-            return Ok(user);
-        }
-        Err(TenetError::NotFoundError)
-    }
-
     pub fn contains_username(&self, username: String) -> bool {
-        self.users.iter().any(|u| u.username == username)
+        DbUser::find_by_tenant_and_email(self.id, username).is_ok()
     }
 
+    /*
     pub fn get_applications(&self) -> &Vec<Application> {
         &self.applications
     }

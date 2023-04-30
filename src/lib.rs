@@ -165,7 +165,7 @@ mod tests {
 
         let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
-        let mut tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
+        let tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
 
         let user = User::new(
             "someone@something.de".to_string(),
@@ -200,10 +200,10 @@ mod tests {
 
             let users = tenant.get_users();
             for user in users {
-                tenant.delete_user(user.id);
+                tenant.delete_user(user.id).unwrap();
             }
 
-            tenet.delete_tenant(tenant_id);
+            tenet.delete_tenant(tenant_id).unwrap();
         }
     }
 
