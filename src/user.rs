@@ -1,8 +1,8 @@
-use std::{str::FromStr, fmt::Display};
+use std::str::FromStr;
 
 use chrono::{NaiveDateTime, Utc};
 
-use crate::postgresql::dbuser::DbUser;
+use crate::{postgresql::dbuser::DbUser, encryption_modes::EncryptionModes};
 
 
 #[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -36,31 +36,6 @@ impl From<&DbUser> for User {
         }
     }
 }
-
-
-#[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
-pub enum EncryptionModes {
-    Argon2
-}
-
-
-impl FromStr for EncryptionModes {
-    type Err = ();
-
-    fn from_str(input: &str) -> Result<EncryptionModes, Self::Err> {
-        match input {
-            "Argon2"  => Ok(EncryptionModes::Argon2),
-            _      => Err(()),
-        }
-    }
-}
-
-impl Display for EncryptionModes {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
 
 impl User {
     pub fn new(username: String, full_name: String, password: String, encryption_mode: EncryptionModes, email: String, email_verified: bool, tenant_id: uuid::Uuid) -> Self {

@@ -1,6 +1,6 @@
 use chrono::{Utc, NaiveDateTime};
 
-use crate::{error::TenetError, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}, dbapplication::DbApplication, dbrole::DbRole}, Application, Role};
+use crate::{error::TenetError, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}, dbapplication::{DbApplication, DbApplicationMessage}, dbrole::{DbRole, DbRoleMessage}}, Application, Role};
 
 
 #[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
@@ -82,44 +82,48 @@ impl Tenant {
         Vec::new()      
     }
 
-/*
-    pub fn add_application(&mut self, application: Application) -> Result<uuid::Uuid, TenetError> {
-        self.applications.push(application);
-        self.updated_at = Some(Utc::now().naive_utc());
-
-        Ok(self.applications.last().unwrap().id)
+    pub fn get_application_by_id(&self, application_id: uuid::Uuid) -> Result<Application, TenetError> {
+        let application = DbApplication::find(self.id, application_id)?;
+        Ok(Application::from(&application))
     }
 
-    pub fn remove_application(&mut self, application_id: uuid::Uuid) -> Result<Application, TenetError> {
-        if let Some(index) = self.applications.iter().position(|a| a.id == application_id) {
-            let application = self.applications.remove(index);
-            self.updated_at = Some(Utc::now().naive_utc());
-            return Ok(application);
-        }
-        Err(TenetError::NotFoundError)
+    pub fn add_application(&self, application: Application) -> Result<Application, TenetError> {
+        let application_message = DbApplicationMessage {
+            application_type: application.application_type.to_string(),
+            storage_id: application.storage_id,
+            db_tenant_id: application.db_tenant_id
+        };
+        let created_application = DbApplication::create(application_message)?;
+
+        Ok(Application::from(&created_application))
     }
-*/
+
+    pub fn delete_application(&self, application_id: uuid::Uuid) -> Result<(), TenetError> {
+        DbApplication::delete(application_id)?;
+        Ok(())
+    }
+
     pub fn get_roles(&self) -> Vec<Role> {
         if let Ok(roles) = DbRole::find_by_tenant(self.id) {
             return roles.iter().map(|r| Role::from(r)).collect();
         }
         Vec::new()
     }
-/*
-    pub fn add_role(&mut self, role: Role) -> Result<uuid::Uuid, TenetError> {
-        self.roles.push(role);
-        self.updated_at = Some(Utc::now().naive_utc());
 
-        Ok(self.roles.last().unwrap().id)
+    pub fn add_role(&mut self, role: Role) -> Result<Role, TenetError> {
+        let role_message = DbRoleMessage {
+            role_type: role.role_type.to_string(),
+            user_id: role.user_id,
+            application_id: role.application_id,
+            db_tenant_id: role.db_tenant_id
+        };
+        let created_role = DbRole::create(role_message)?;
+
+        Ok(Role::from(&created_role))
     }
 
-    pub fn remove_role(&mut self, role_id: uuid::Uuid) -> Result<Role, TenetError> {
-        if let Some(index) = self.roles.iter().position(|r| r.id == role_id) {
-            let role = self.roles.remove(index);
-            self.updated_at = Some(Utc::now().naive_utc());
-            return Ok(role);
-        }
-        Err(TenetError::NotFoundError)
+    pub fn delete_role(&self, role_id: uuid::Uuid) -> Result<(), TenetError> {
+        DbRole::delete(role_id)?;
+        Ok(())
     }
-    */
 }

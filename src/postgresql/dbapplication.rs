@@ -65,9 +65,12 @@ impl DbApplication {
         Ok(applications)
     }
 
-    pub fn find(id: Uuid) -> Result<Self, TenetError> {
+    pub fn find(tenant_id: uuid::Uuid, application_id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
-        let application = applications::table.filter(applications::id.eq(id)).first(&mut connection)?;
+        let application = applications::table
+            .filter(applications::id.eq(application_id))
+            .filter(applications::db_tenant_id.eq(tenant_id))
+            .first(&mut connection)?;
         Ok(application)
     }
 

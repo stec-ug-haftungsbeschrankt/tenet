@@ -1,16 +1,18 @@
 extern crate thiserror;
 extern crate diesel;
 #[macro_use] extern crate diesel_migrations;
-#[macro_use] extern crate serde_derive;
-#[macro_use] extern crate lazy_static;
+extern crate serde_derive;
+extern crate lazy_static;
 extern crate log;
 
 mod application;
 mod application_type;
+mod encryption_modes;
 mod error;
 mod role;
 mod role_type;
 mod storage;
+mod storage_type;
 mod tenant;
 mod user;
 
@@ -95,37 +97,9 @@ impl Tenet {
 
 #[cfg(test)]
 mod tests {
-    use crate::user::{User, EncryptionModes};
+    use crate::{user::User, encryption_modes::EncryptionModes};
 
     use super::*;
-/* 
-    #[test]
-    fn test() -> Result<(), TenetError> {
-        let storage = Storage::JsonFile { path: "./test.json".to_string() };
-        let mut tenet = Tenet::new(storage);
-
-        let tenant = tenet.create_tenant()?;
-
-        let user = User::new("someone@someplace.de".to_string(), "Danny Crane".to_string(), "password".to_string(), EncryptionModes::Argon2, "someone@someplace.de".to_string(), false);
-        let user_id = tenant.add_user(user)?;
-
-        let application_storage = Storage::JsonFile { path: "".to_string() };
-        let application = Application::new(application_storage, ApplicationType::Shop);
-        let application_id = tenant.add_application(application)?;
-
-        let role = Role::new(user_id, application_id, RoleType::Administrator);
-        tenant.add_role(role)?;
-
-        let application_storage2 = Storage::JsonFile { path: "".to_string() };
-        let application2 = Application::new(application_storage2, ApplicationType::Shop);
-        tenant.add_application(application2)?;
-
-        println!("{:?}", tenet);
-
-        tenet.persist()
-    }
-    */
-
 
     #[test]
     fn create_tenant_test() {

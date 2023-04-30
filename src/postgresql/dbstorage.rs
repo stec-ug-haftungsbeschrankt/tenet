@@ -27,8 +27,6 @@ pub struct DbStorageMessage {
 }
 
 
-
-
 #[derive(Debug, Serialize, Deserialize, Identifiable, Associations, PartialEq, Queryable, Insertable)]
 #[diesel(belongs_to(DbTenant))]
 #[diesel(table_name = storages)]
