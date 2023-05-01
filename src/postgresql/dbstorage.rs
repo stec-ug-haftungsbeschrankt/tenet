@@ -72,9 +72,12 @@ impl DbStorage {
         Ok(storages)
     }
 
-    pub fn find(id: Uuid) -> Result<Self, TenetError> {
+    pub fn find(tenant_id: uuid::Uuid, id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
-        let storage = storages::table.filter(storages::id.eq(id)).first(&mut connection)?;
+        let storage = storages::table
+            .filter(storages::id.eq(id))
+            .filter(storages::db_tenant_id.eq(tenant_id))
+            .first(&mut connection)?;
         Ok(storage)
     }
 

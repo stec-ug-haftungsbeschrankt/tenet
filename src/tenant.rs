@@ -1,6 +1,16 @@
 use chrono::{Utc, NaiveDateTime};
 
-use crate::{error::TenetError, user::User, postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}, dbapplication::{DbApplication, DbApplicationMessage}, dbrole::{DbRole, DbRoleMessage}}, Application, Role};
+use crate::{
+    error::TenetError, 
+    user::User, 
+    postgresql::{dbtenant::DbTenant, dbuser::{DbUser, DbUserMessage}, 
+    dbapplication::{DbApplication, DbApplicationMessage}, 
+    dbrole::{DbRole, DbRoleMessage}, 
+    dbstorage::{DbStorage, DbStorageMessage}}, 
+    Application, 
+    Role, 
+    Storage
+};
 
 
 #[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
@@ -32,6 +42,7 @@ impl Tenant {
         }
     }
 
+    /* Users */
     pub fn get_users(&self) -> Vec<User> {
         if let Ok(db_users) = DbUser::find_by_tenant(self.id) {
             return db_users.iter().map(User::from).collect();
@@ -74,7 +85,7 @@ impl Tenant {
         DbUser::find_by_tenant_and_email(self.id, username).is_ok()
     }
 
-
+    /* Applications */
     pub fn get_applications(&self) -> Vec<Application> {
         if let Ok(applications) = DbApplication::find_by_tenant(self.id) {
             return applications.iter().map(Application::from).collect();
@@ -103,6 +114,39 @@ impl Tenant {
         Ok(())
     }
 
+    /* Storage */
+    pub fn get_storages(&self) -> Vec<Storage> {
+        if let Ok(storages) = DbStorage::find_by_tenant(self.id) {
+            return storages.iter().map(Storage::from).collect();
+        }
+        Vec::new()      
+    }
+
+    pub fn get_storage_by_id(&self, storage_id: uuid::Uuid) -> Result<Storage, TenetError> {
+        let storage = DbStorage::find(self.id, storage_id)?;
+        Ok(Storage::from(&storage))
+    }
+
+    pub fn add_storage(&self, storage: Storage) -> Result<Storage, TenetError> {
+        let storage_message = DbStorageMessage {
+            storage_type: storage.storage_type.to_string(),
+            path: storage.path,
+            connection_string: storage.connection_string,
+            schema: storage.schema,
+            table_prefix: storage.table_prefix,
+            db_tenant_id: storage.db_tenant_id
+        };
+        let created_storage = DbStorage::create(storage_message)?;
+
+        Ok(Storage::from(&created_storage))
+    }
+
+    pub fn delete_storage(&self, storage_id: uuid::Uuid) -> Result<(), TenetError> {
+        DbStorage::delete(storage_id)?;
+        Ok(())
+    }
+
+    /* Roles */
     pub fn get_roles(&self) -> Vec<Role> {
         if let Ok(roles) = DbRole::find_by_tenant(self.id) {
             return roles.iter().map(Role::from).collect();
