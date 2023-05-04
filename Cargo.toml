@@ -1,5 +1,10 @@
 [package]
 name = "tenet"
+description = "User and Tenant management for Saas applications"
+authors = ["Stefan Schick <stefan.schick@stecug.de>"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+homepage = "https://stecug.de"
 version = "0.1.0"
 edition = "2021"
 
