@@ -1,0 +1,46 @@
+[
+  {
+    "id": "f660e6a7-58e2-4531-b40d-afd494e976a9",
+    "users": [
+      {
+        "id": "62a9523c-04e4-4e93-8cbd-bf4bbf944212",
+        "username": "someone@someplace.de",
+        "password": "password",
+        "encryption_mode": "Argon2",
+        "email": "someone@someplace.de",
+        "email_verified": false,
+        "full_name": "Danny Crane"
+      }
+    ],
+    "applications": [
+      {
+        "id": "b32bea1a-ddac-470f-8b6b-5aafd83e1379",
+        "application_type": "Shop",
+        "storage": {
+          "JsonFile": {
+            "path": ""
+          }
+        }
+      },
+      {
+        "id": "48836964-0331-4697-91f0-a91926ef7699",
+        "application_type": "Shop",
+        "storage": {
+          "JsonFile": {
+            "path": ""
+          }
+        }
+      }
+    ],
+    "roles": [
+      {
+        "id": "af3e07c2-acf6-4ebd-931d-8be7f7e5b85a",
+        "user_id": "62a9523c-04e4-4e93-8cbd-bf4bbf944212",
+        "application_id": "b32bea1a-ddac-470f-8b6b-5aafd83e1379",
+        "role_type": "Administrator"
+      }
+    ],
+    "created_at": "2023-04-24T18:47:30.919687",
+    "updated_at": "2023-04-24T18:47:30.919735"
+  }
+]
