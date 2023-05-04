@@ -97,7 +97,7 @@ impl Tenet {
 
 #[cfg(test)]
 mod tests {
-    use crate::{user::User, encryption_modes::EncryptionModes, application_type::ApplicationType};
+    use crate::{user::User, encryption_modes::EncryptionModes, application_type::ApplicationType, role_type::RoleType};
 
     use super::*;
 
@@ -189,12 +189,53 @@ mod tests {
         assert_eq!(created_application.id, get_application.id);
     }
 
+    #[test]
+    fn create_role() {
+        cleanup_database();
+    
+        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string()); 
+        let tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
+
+        let storage = Storage::new_json_file("some_path", tenant.id);
+        let storage = tenant.add_storage(&storage).unwrap();
+
+        let application = Application::new(ApplicationType::Shop, storage.id, tenant.id);
+        let created_application = tenant.add_application(&application).unwrap();
+
+        let user = User::new(
+            "someone@something.de".to_string(),
+            "Danny Crane".to_string(), 
+            "password".to_string(), 
+            EncryptionModes::Argon2, 
+            "someone@something.de".to_string(), 
+            true, 
+            tenant.id);
+        let created_user = tenant.add_user(&user).unwrap();
+
+        let role = Role::new(RoleType::Administrator, created_user.id, created_application.id, tenant.id);
+        let created_role = tenant.add_role(&role).unwrap();
+
+        assert_eq!(role.role_type, created_role.role_type);
+        assert_eq!(role.user_id, created_role.user_id);
+        assert_eq!(role.application_id, created_role.application_id);
+        assert_eq!(role.db_tenant_id, created_role.db_tenant_id);
+
+        let get_role = tenant.get_role_by_id(created_role.id).unwrap();
+
+        assert_eq!(created_role.id, get_role.id);
+    }
+
+
     fn cleanup_database() {
         let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
         for tenant_id in tenet.get_tenant_ids() {
 
             let tenant = tenet.get_tenant_by_id(tenant_id).unwrap();
+
+            for role in tenant.get_roles() {
+                tenant.delete_role(role.id).unwrap();
+            }
 
             for application in tenant.get_applications() {
                 tenant.delete_application(application.id).unwrap();

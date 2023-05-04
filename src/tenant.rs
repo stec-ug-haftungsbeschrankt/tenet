@@ -154,7 +154,12 @@ impl Tenant {
         Vec::new()
     }
 
-    pub fn add_role(&mut self, role: Role) -> Result<Role, TenetError> {
+    pub fn get_role_by_id(&self, role_id: uuid::Uuid) -> Result<Role, TenetError> {
+        let role = DbRole::find(self.id, role_id)?;
+        Ok(Role::from(&role))
+    }
+
+    pub fn add_role(&self, role: &Role) -> Result<Role, TenetError> {
         let role_message = DbRoleMessage {
             role_type: role.role_type.to_string(),
             user_id: role.user_id,
