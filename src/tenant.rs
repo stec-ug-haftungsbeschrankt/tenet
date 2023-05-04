@@ -98,7 +98,7 @@ impl Tenant {
         Ok(Application::from(&application))
     }
 
-    pub fn add_application(&self, application: Application) -> Result<Application, TenetError> {
+    pub fn add_application(&self, application: &Application) -> Result<Application, TenetError> {
         let application_message = DbApplicationMessage {
             application_type: application.application_type.to_string(),
             storage_id: application.storage_id,
@@ -127,13 +127,13 @@ impl Tenant {
         Ok(Storage::from(&storage))
     }
 
-    pub fn add_storage(&self, storage: Storage) -> Result<Storage, TenetError> {
+    pub fn add_storage(&self, storage: &Storage) -> Result<Storage, TenetError> {
         let storage_message = DbStorageMessage {
             storage_type: storage.storage_type.to_string(),
-            path: storage.path,
-            connection_string: storage.connection_string,
-            schema: storage.schema,
-            table_prefix: storage.table_prefix,
+            path: storage.path.clone(),
+            connection_string: storage.connection_string.clone(),
+            schema: storage.schema.clone(),
+            table_prefix: storage.table_prefix.clone(),
             db_tenant_id: storage.db_tenant_id
         };
         let created_storage = DbStorage::create(storage_message)?;

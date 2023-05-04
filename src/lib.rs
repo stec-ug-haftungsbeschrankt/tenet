@@ -97,7 +97,7 @@ impl Tenet {
 
 #[cfg(test)]
 mod tests {
-    use crate::{user::User, encryption_modes::EncryptionModes};
+    use crate::{user::User, encryption_modes::EncryptionModes, application_type::ApplicationType};
 
     use super::*;
 
@@ -166,6 +166,28 @@ mod tests {
         assert_eq!(created_user.id, get_user.id);
     }
 
+    #[test]
+    fn create_application() {
+        cleanup_database();
+    
+        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
+    
+        let tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
+
+        let storage = Storage::new_json_file("some_path", tenant.id);
+        let storage = tenant.add_storage(&storage).unwrap();
+
+        let application = Application::new(ApplicationType::Shop, storage.id, tenant.id);
+        let created_application = tenant.add_application(&application).unwrap();
+
+        assert_eq!(application.application_type, created_application.application_type);
+        assert_eq!(application.storage_id, created_application.storage_id);
+        assert_eq!(application.db_tenant_id, created_application.db_tenant_id);
+
+        let get_application = tenant.get_application_by_id(created_application.id).unwrap();
+
+        assert_eq!(created_application.id, get_application.id);
+    }
 
     fn cleanup_database() {
         let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
@@ -174,13 +196,19 @@ mod tests {
 
             let tenant = tenet.get_tenant_by_id(tenant_id).unwrap();
 
-            let users = tenant.get_users();
-            for user in users {
+            for application in tenant.get_applications() {
+                tenant.delete_application(application.id).unwrap();
+            }
+
+            for storage in tenant.get_storages() {
+                tenant.delete_storage(storage.id).unwrap();
+            }
+
+            for user in tenant.get_users() {
                 tenant.delete_user(user.id).unwrap();
             }
 
             tenet.delete_tenant(tenant_id).unwrap();
         }
     }
-
 }
