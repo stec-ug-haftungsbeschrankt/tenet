@@ -78,6 +78,16 @@ impl Tenet {
         None
     }
 
+    pub fn set_tenant_title(&self, tenant_id: uuid::Uuid, title: String) -> Result<Tenant, TenetError> {
+        let tenant_message = DbTenantMessage {
+            title
+        };
+        
+        let updated_tenant = DbTenant::update(tenant_id, tenant_message)?;
+
+        Ok(Tenant::from(&updated_tenant))
+    }
+
     pub fn create_tenant(&mut self, title: String) -> Result<Tenant, TenetError> {
         let tenant_message = DbTenantMessage {
             title
