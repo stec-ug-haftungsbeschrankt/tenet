@@ -91,7 +91,7 @@ impl Tenet {
         Ok(Tenant::from(&updated_tenant))
     }
 
-    pub fn create_tenant(&mut self, title: String) -> Result<Tenant, TenetError> {
+    pub fn create_tenant(&self, title: String) -> Result<Tenant, TenetError> {
         let tenant_message = DbTenantMessage {
             title
         };
@@ -100,7 +100,7 @@ impl Tenet {
         Ok(Tenant::from(&created_tenant))
     }
 
-    pub fn delete_tenant(&mut self, tenant_id: uuid::Uuid) -> Result<(), TenetError> {
+    pub fn delete_tenant(&self, tenant_id: uuid::Uuid) -> Result<(), TenetError> {
         DbTenant::delete(tenant_id)?;
         Ok(())
     }
@@ -117,7 +117,7 @@ mod tests {
     fn create_tenant_test() {
         cleanup_database();
         
-        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
+        let tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
         let title: String = "SomeTenantTitle".to_string();
         let tenant = tenet.create_tenant(title.clone()).unwrap();
@@ -131,7 +131,7 @@ mod tests {
     fn get_tenant_ids_test() {
         cleanup_database();
 
-        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
+        let tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
         let precondition = tenet.get_tenant_ids();
         assert_eq!(0, precondition.len(), "Table must be empty");
@@ -151,7 +151,7 @@ mod tests {
     fn create_user() {
         cleanup_database();
 
-        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
+        let tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
         let tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
 
@@ -182,7 +182,7 @@ mod tests {
     fn create_application() {
         cleanup_database();
     
-        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
+        let tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
     
         let tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
 
@@ -205,7 +205,7 @@ mod tests {
     fn create_role() {
         cleanup_database();
     
-        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string()); 
+        let tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string()); 
         let tenant = tenet.create_tenant("TenantTitle".to_string()).unwrap();
 
         let storage = Storage::new_json_file("some_path", tenant.id);
@@ -239,7 +239,7 @@ mod tests {
 
 
     fn cleanup_database() {
-        let mut tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
+        let tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
 
         for tenant_id in tenet.get_tenant_ids() {
 
