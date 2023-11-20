@@ -6,7 +6,7 @@ extern crate lazy_static;
 extern crate log;
 
 mod application;
-mod application_type;
+pub mod application_type;
 mod encryption_modes;
 mod error;
 mod role;
