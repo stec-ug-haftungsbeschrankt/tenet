@@ -64,6 +64,19 @@ impl From<DbUserMessage> for DbUser {
     }
 }
 
+impl From<DbUser> for DbUserMessage {
+    fn from(user: DbUser) -> Self {
+        DbUserMessage {
+            email: user.email,
+            email_verified: user.email_verified,
+            password: user.password,
+            encryption_mode: user.encryption_mode,
+            full_name: user.full_name,
+            db_tenant_id: user.db_tenant_id
+        }
+    }
+}
+
 
 impl DbUser {
     pub fn find_by_tenant(tenant_id: Uuid) -> Result<Vec<Self>, TenetError> {

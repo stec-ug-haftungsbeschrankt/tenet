@@ -85,6 +85,14 @@ impl Tenant {
         DbUser::find_by_tenant_and_email(self.id, username).is_ok()
     }
 
+    pub fn set_user_verified(&self, user_id: uuid::Uuid) -> bool {
+        if let Ok(user) = DbUser::find(self.id, user_id) {
+            let user_message = DbUserMessage::from(user);
+            return DbUser::update(user_id, user_message).is_ok();
+        }
+        false
+    }
+
     /* Applications */
     pub fn get_applications(&self) -> Vec<Application> {
         if let Ok(applications) = DbApplication::find_by_tenant(self.id) {
