@@ -7,12 +7,12 @@ extern crate log;
 
 mod application;
 pub mod application_type;
-mod encryption_modes;
+pub mod encryption_modes;
 mod error;
 mod role;
-mod role_type;
+pub mod role_type;
 mod storage;
-mod storage_type;
+pub mod storage_type;
 mod tenant;
 mod user;
 
@@ -36,6 +36,9 @@ pub static DEFAULT_DATABASE_URL: &str = "postgres://postgres:@localhost/stec_ten
 #[derive(Debug, Clone)]
 pub struct Tenet { }
 
+
+unsafe impl Send for Tenet {}
+unsafe impl Sync for Tenet {}
 
 impl Tenet {
     pub fn new(connection_string: String) -> Self {
@@ -102,7 +105,6 @@ impl Tenet {
         Ok(())
     }
 }
-
 
 
 #[cfg(test)]
