@@ -32,10 +32,10 @@ lazy_static! {
 
 
 pub fn initialize_database() {
-    info!("Initializing Database");
+    info!("Initializing Tenet Database");
     lazy_static::initialize(&POOL);
     let mut connection = connection().expect("Failed to get db connection");
-    connection.run_pending_migrations(MIGRATIONS).unwrap();
+    connection.run_pending_migrations(MIGRATIONS).expect("Unable to run migrations");
 }
 
 
