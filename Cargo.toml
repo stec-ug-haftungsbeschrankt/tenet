@@ -22,8 +22,8 @@ serde_derive = "*"
 lazy_static = "1.4.0"
 r2d2 = "0.8.9"
 
-diesel = { version = "2.0", features = ["postgres", "r2d2", "uuid", "chrono"] }
-diesel_migrations = "2.0"
+diesel = { version = "2.1", features = ["postgres", "r2d2", "uuid", "chrono"] }
+diesel_migrations = "2.1"
 
 rand = "0.8.3"
 rust-argon2 = "2.0.0"
