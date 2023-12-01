@@ -93,6 +93,17 @@ impl Tenant {
         false
     }
 
+    pub fn authenticate_user(&self, username: String, password: String) -> Option<User> {
+        if let Ok(user) = DbUser::find_by_tenant_and_email(self.id, username) {
+            if let Ok(verified) = user.verify_password(&password) {
+                if verified {
+                    return Some(User::from(&user))
+                }        
+            }
+        }
+        None
+    }
+
     /* Applications */
     pub fn get_applications(&self) -> Vec<Application> {
         if let Ok(applications) = DbApplication::find_by_tenant(self.id) {
