@@ -20,7 +20,7 @@ serde_json = "*"
 serde_derive = "*"
 
 lazy_static = "1.4.0"
-r2d2 = "0.8.9"
+r2d2 = "0.8.10"
 
 diesel = { version = "2.1", features = ["postgres", "r2d2", "uuid", "chrono"] }
 diesel_migrations = "2.1"

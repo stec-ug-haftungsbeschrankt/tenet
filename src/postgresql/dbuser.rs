@@ -145,7 +145,9 @@ impl DbUser {
 
     fn hash_password(&mut self) -> Result<(), TenetError> {
         let salt: [u8; 32] = rand::thread_rng().gen();
-        let config = Config::default();
+        // Alternative would be the low_memory variant. Can be time consuming.
+        // See https://github.com/sru-systems/rust-argon2/issues/52
+        let config = Config::original(); 
 
         self.password = argon2::hash_encoded(self.password.as_bytes(), &salt, &config)?;
 
