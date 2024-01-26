@@ -20,16 +20,16 @@ mod schema;
 mod postgresql;
 
 use std::env;
+use postgresql::{dbtenant::{DbTenant, DbTenantMessage}, database::initialize_database, dbuser::DbUser};
+use uuid::Uuid;
 
 pub use application::*;
 pub use error::*;
-use postgresql::{dbtenant::{DbTenant, DbTenantMessage}, database::initialize_database, dbuser::DbUser};
 pub use role::*;
 pub use storage::*;
 pub use tenant::*;
 pub use user::*;
 
-use uuid::Uuid;
 
 pub static DEFAULT_DATABASE_URL: &str = "postgres://postgres:@localhost/stec_tenet";
 
