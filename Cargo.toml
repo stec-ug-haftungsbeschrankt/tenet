@@ -19,7 +19,6 @@ serde = "*"
 serde_json = "*"
 serde_derive = "*"
 
-lazy_static = "1.4.0"
 r2d2 = "0.8.10"
 
 diesel = { version = "2.1", features = ["postgres", "r2d2", "uuid", "chrono"] }
@@ -30,3 +29,8 @@ rust-argon2 = "2.0.0"
 
 log = "*"
 simple_logger = "4.0"
+
+
+[dev-dependencies]
+testcontainers = "*"
+testcontainers-modules = { version = "*", features = ["postgres"] }
