@@ -118,20 +118,22 @@ impl Tenet {
 
 #[cfg(test)]
 mod tests {
-    use testcontainers::clients::Cli;
     use testcontainers_modules::postgres::Postgres;
+    use testcontainers_modules::testcontainers::runners::SyncRunner;
     use crate::{application_type::ApplicationType, encryption_modes::EncryptionModes, role_type::RoleType, user::User};
 
     use super::*;
 
     fn test_harness(test_code: impl Fn(String)) {
-        let docker = Cli::default();
-        let node = docker.run(Postgres::default());
-        let connection_string = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", node.get_host_port_ipv4(5432));
+        let node = Postgres::default().start().expect("Unable to start container");
 
+        let host = node.get_host().unwrap();
+        let port = node.get_host_port_ipv4(5432).unwrap();
+        let connection_string = format!("postgres://postgres:postgres@{}:{}/postgres", host, port);
+        println!("{}", connection_string);
         test_code(connection_string);
 
-        node.stop();
+        node.stop().expect("Failed to stop postgres container");
         //node.rm();
     }
     
