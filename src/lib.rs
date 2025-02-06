@@ -260,32 +260,4 @@ mod tests {
             assert_eq!(created_role.id, get_role.id);
         });
     }
-
-
-    fn cleanup_database() {
-        let tenet = Tenet::new(DEFAULT_DATABASE_URL.to_string());
-
-        for tenant_id in tenet.get_tenant_ids() {
-
-            let tenant = tenet.get_tenant_by_id(tenant_id).unwrap();
-
-            for role in tenant.get_roles() {
-                tenant.delete_role(role.id).unwrap();
-            }
-
-            for application in tenant.get_applications() {
-                tenant.delete_application(application.id).unwrap();
-            }
-
-            for storage in tenant.get_storages() {
-                tenant.delete_storage(storage.id).unwrap();
-            }
-
-            for user in tenant.get_users() {
-                tenant.delete_user(user.id).unwrap();
-            }
-
-            tenet.delete_tenant(tenant_id).unwrap();
-        }
-    }
 }
