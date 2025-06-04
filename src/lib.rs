@@ -1,3 +1,38 @@
+//! # Tenet
+//! 
+//! `tenet` is a library for managing tenants, applications, and users for SaaS applications.
+//!
+//! ## Main Features
+//!
+//! * Multi-tenant architecture for SaaS applications
+//! * User management with secure password storage
+//! * Role management for different permission levels
+//! * Application configuration with various storage options
+//!
+//! ## Examples
+//!
+//! ```
+//! use tenet::{Tenet, Tenant, User, encryption_modes::EncryptionModes};
+//!
+//! // Initialize the Tenet instance with a database connection
+//! let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
+//!
+//! // Create a new tenant
+//! let tenant = tenet.create_tenant("My Company".to_string()).unwrap();
+//!
+//! // Create a user and add it to the tenant
+//! let user = User::new(
+//!     "admin@example.com".to_string(),
+//!     "Admin User".to_string(),
+//!     "secure_password".to_string(),
+//!     EncryptionModes::Argon2,
+//!     "admin@example.com".to_string(),
+//!     true,
+//!     tenant.id
+//! );
+//! let created_user = tenant.add_user(&user).unwrap();
+//! ```
+
 extern crate thiserror;
 extern crate diesel;
 #[macro_use] extern crate diesel_migrations;
@@ -30,10 +65,27 @@ pub use storage::*;
 pub use tenant::*;
 pub use user::*;
 
-
+/// Default database URL used when no connection string is provided.
 pub static DEFAULT_DATABASE_URL: &str = "postgres://postgres:@localhost/stec_tenet";
+/// Stores the connection string for the database connection.
 static CONNECTION_STRING: OnceLock<String> = OnceLock::new();
 
+/// Main structure for interacting with the Tenet system.
+///
+/// This structure is the primary entry point for working with the Tenet library.
+/// It manages the database connection and provides methods for managing tenants.
+///
+/// # Example
+///
+/// ```
+/// use tenet::Tenet;
+///
+/// // Initialize Tenet with a custom database connection
+/// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
+///
+/// // Create a new tenant
+/// let tenant = tenet.create_tenant("My Company".to_string()).unwrap();
+/// ```
 #[derive(Debug, Clone)]
 pub struct Tenet { }
 
@@ -42,6 +94,20 @@ unsafe impl Send for Tenet {}
 unsafe impl Sync for Tenet {}
 
 impl Tenet {
+    /// Creates a new Tenet instance with the specified database connection.
+    ///
+    /// # Parameters
+    ///
+    /// * `connection_string` - The connection string for the database.
+    ///   If empty, the default URL will be used.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tenet::Tenet;
+    ///
+    /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
+    /// ```
     pub fn new(connection_string: String) -> Self {     
         let database_url = if connection_string.is_empty() {
             info!("Database url not set, using default ConnectionString");
@@ -58,6 +124,20 @@ impl Tenet {
         Tenet { }
     }
 
+    /// Returns a list of all tenant IDs.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<Uuid>` containing the IDs of all tenants in the system.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tenet::Tenet;
+    ///
+    /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
+    /// let tenant_ids = tenet.get_tenant_ids();
+    /// ```
     pub fn get_tenant_ids(&self) -> Vec<Uuid> {
         if let Ok(tenants) = DbTenant::find_all() {
             return tenants.iter().map(|t| t.id).collect();
@@ -65,6 +145,19 @@ impl Tenet {
         Vec::new()
     }
 
+    /// Finds a tenant ID for a user by their username.
+    ///
+    /// # Parameters
+    ///
+    /// * `username` - The username (typically the email address) of the user.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` with the tenant ID as a `Uuid` or a `TenetError`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TenetError::NotFoundError` if the user or tenant is not found.
     pub fn get_tenant_id_by_username(&self, username: String) -> Result<uuid::Uuid, TenetError> {
         let user = DbUser::find_by_email(username).unwrap();
         if let Ok(tenant) = DbTenant::find(user.db_tenant_id.unwrap()) {
@@ -74,6 +167,19 @@ impl Tenet {
         Err(TenetError::NotFoundError)
     }
 
+    /// Finds a tenant by a username of one of its users.
+    ///
+    /// # Parameters
+    ///
+    /// * `username` - The username (typically the email address) of the user.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` with the `Tenant` object or a `TenetError`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TenetError::NotFoundError` if the user or tenant is not found.
     pub fn get_tenant_by_username(&self, username: String) -> Result<Tenant, TenetError> {
         let user = DbUser::find_by_email(username).unwrap();
         if let Ok(tenant) = DbTenant::find(user.db_tenant_id.unwrap()) {
@@ -83,6 +189,15 @@ impl Tenet {
         Err(TenetError::NotFoundError)
     }
 
+    /// Finds a tenant by its ID.
+    ///
+    /// # Parameters
+    ///
+    /// * `tenant_id` - The ID of the tenant to find.
+    ///
+    /// # Returns
+    ///
+    /// An `Option<Tenant>` containing the tenant if found, otherwise `None`.
     pub fn get_tenant_by_id(&self, tenant_id: uuid::Uuid) -> Option<Tenant> {
         if let Ok(db_tenant) = DbTenant::find(tenant_id) {
             return Some(Tenant::from(&db_tenant));
@@ -90,6 +205,20 @@ impl Tenet {
         None
     }
 
+    /// Updates the title of a tenant.
+    ///
+    /// # Parameters
+    ///
+    /// * `tenant_id` - The ID of the tenant to update.
+    /// * `title` - The new title for the tenant.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` with the updated `Tenant` object or a `TenetError`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TenetError` if the update fails.
     pub fn set_tenant_title(&self, tenant_id: uuid::Uuid, title: String) -> Result<Tenant, TenetError> {
         let tenant_message = DbTenantMessage {
             title
@@ -100,6 +229,28 @@ impl Tenet {
         Ok(Tenant::from(&updated_tenant))
     }
 
+    /// Creates a new tenant.
+    ///
+    /// # Parameters
+    ///
+    /// * `title` - The title for the new tenant.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` with the newly created `Tenant` object or a `TenetError`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TenetError` if the creation fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use tenet::Tenet;
+    ///
+    /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
+    /// let tenant = tenet.create_tenant("My Company".to_string()).unwrap();
+    /// ```
     pub fn create_tenant(&self, title: String) -> Result<Tenant, TenetError> {
         let tenant_message = DbTenantMessage {
             title
@@ -109,6 +260,19 @@ impl Tenet {
         Ok(Tenant::from(&created_tenant))
     }
 
+    /// Deletes a tenant by its ID.
+    ///
+    /// # Parameters
+    ///
+    /// * `tenant_id` - The ID of the tenant to delete.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` with `()` on success or a `TenetError`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `TenetError` if the deletion fails.
     pub fn delete_tenant(&self, tenant_id: uuid::Uuid) -> Result<(), TenetError> {
         DbTenant::delete(tenant_id)?;
         Ok(())
