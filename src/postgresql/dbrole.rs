@@ -69,6 +69,15 @@ impl DbRole {
         Ok(roles)
     }
 
+    pub fn find_by_user(tenant_id: Uuid, user_id: Uuid) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection()?;
+        let roles = roles::table
+            .filter(roles::db_tenant_id.eq(tenant_id))
+            .filter(roles::user_id.eq(user_id))
+            .load(&mut connection)?;
+        Ok(roles)
+    }
+
     pub fn find(tenant_id: uuid::Uuid, id: Uuid) -> Result<Self, TenetError> {
         let mut connection = database::connection()?;
         let role = roles::table

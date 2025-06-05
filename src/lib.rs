@@ -424,4 +424,163 @@ mod tests {
             assert_eq!(created_role.id, get_role.id);
         });
     }
+
+    #[test]
+    fn update_tenant_title() {
+        test_harness(|connection_string| {
+            let tenet = Tenet::new(connection_string);
+
+            // Create a tenant with initial title
+            let initial_title = "Initial Title".to_string();
+            let tenant = tenet.create_tenant(initial_title.clone()).unwrap();
+            assert_eq!(initial_title, tenant.title);
+
+            // Update the tenant title
+            let new_title = "Updated Title".to_string();
+            let updated_tenant = tenet.set_tenant_title(tenant.id, new_title.clone()).unwrap();
+
+            // Verify title was updated
+            assert_eq!(new_title, updated_tenant.title);
+
+            // Fetch tenant and verify title persisted
+            let fetched_tenant = tenet.get_tenant_by_id(tenant.id).unwrap();
+            assert_eq!(new_title, fetched_tenant.title);
+        });
+    }
+
+    #[test]
+    fn delete_tenant_test() {
+        test_harness(|connection_string| {
+            let tenet = Tenet::new(connection_string);
+
+            // Create a tenant
+            let tenant = tenet.create_tenant("Tenant to Delete".to_string()).unwrap();
+
+            // Verify tenant was created
+            let tenant_ids_before = tenet.get_tenant_ids();
+            assert!(tenant_ids_before.contains(&tenant.id));
+
+            // Delete the tenant
+            let delete_result = tenet.delete_tenant(tenant.id);
+            assert!(delete_result.is_ok());
+
+            // Verify tenant was deleted
+            let tenant_ids_after = tenet.get_tenant_ids();
+            assert!(!tenant_ids_after.contains(&tenant.id));
+
+            // Try to get the deleted tenant
+            let deleted_tenant = tenet.get_tenant_by_id(tenant.id);
+            assert!(deleted_tenant.is_none());
+        });
+    }
+
+    #[test]
+    fn tenant_by_username_test() {
+        test_harness(|connection_string| {
+            let tenet = Tenet::new(connection_string);
+
+            // Create a tenant
+            let tenant = tenet.create_tenant("User's Tenant".to_string()).unwrap();
+
+            // Create a user for the tenant
+            let email = "test.user@example.com".to_string();
+            let user = User::new(
+                email.clone(),
+                "Test User".to_string(),
+                "password123".to_string(),
+                EncryptionModes::Argon2,
+                email.clone(),
+                true,
+                tenant.id
+            );
+            let created_user = tenant.add_user(&user).unwrap();
+
+            // Fetch tenant by username
+            let tenant_by_username = tenet.get_tenant_by_username(email).unwrap();
+
+            // Verify correct tenant was returned
+            assert_eq!(tenant.id, tenant_by_username.id);
+            assert_eq!(tenant.title, tenant_by_username.title);
+        });
+    }
+
+    #[test]
+    fn user_password_verification_test() {
+        test_harness(|connection_string| {
+            let tenet = Tenet::new(connection_string);
+            let tenant = tenet.create_tenant("Password Test Tenant".to_string()).unwrap();
+
+            // Create a user with a known password
+            let password = "secure_password123".to_string();
+            let user = User::new(
+                "password.test@example.com".to_string(),
+                "Password Tester".to_string(),
+                password.clone(),
+                EncryptionModes::Argon2,
+                "password.test@example.com".to_string(),
+                true,
+                tenant.id
+            );
+            let created_user = tenant.add_user(&user).unwrap();
+
+            // Verify correct password works
+            assert!(created_user.verify_password(&password).unwrap());
+
+            // Verify incorrect password fails
+            assert!(!created_user.verify_password("wrong_password").unwrap());
+        });
+    }
+
+    #[test]
+    fn get_roles_for_user_test() {
+        test_harness(|connection_string| {
+            let tenet = Tenet::new(connection_string);
+            let tenant = tenet.create_tenant("Role Test Tenant".to_string()).unwrap();
+
+            // Create storage and application
+            let storage = Storage::new_json_file("role_test_path", tenant.id);
+            let storage = tenant.add_storage(&storage).unwrap();
+
+            let application = Application::new(ApplicationType::Shop, storage.id, tenant.id);
+            let application = tenant.add_application(&application).unwrap();
+
+            // Create a user
+            let user = User::new(
+                "role.test@example.com".to_string(),
+                "Role Tester".to_string(),
+                "password".to_string(),
+                EncryptionModes::Argon2,
+                "role.test@example.com".to_string(),
+                true,
+                tenant.id
+            );
+            let user = tenant.add_user(&user).unwrap();
+
+            // Initially user should have no roles
+            let initial_roles = tenant.get_roles_for_user(user.id).unwrap();
+            assert_eq!(0, initial_roles.len());
+
+            // Assign user an Administrator role
+            let admin_role = Role::new(RoleType::Administrator, user.id, application.id, tenant.id);
+            let admin_role = tenant.add_role(&admin_role).unwrap();
+
+            // User should now have one role
+            let roles_after_admin = tenant.get_roles_for_user(user.id).unwrap();
+            assert_eq!(1, roles_after_admin.len());
+            assert_eq!(RoleType::Administrator, roles_after_admin[0].role_type);
+
+            // Assign user a User role for the same application
+            let user_role = Role::new(RoleType::User, user.id, application.id, tenant.id);
+            let user_role = tenant.add_role(&user_role).unwrap();
+
+            // User should now have two roles
+            let roles_after_user = tenant.get_roles_for_user(user.id).unwrap();
+            assert_eq!(2, roles_after_user.len());
+
+            // Verify both roles are present
+            let role_types: Vec<RoleType> = roles_after_user.iter().map(|r| r.role_type).collect();
+            assert!(role_types.contains(&RoleType::Administrator));
+            assert!(role_types.contains(&RoleType::User));
+        });
+    }
 }

@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use chrono::{NaiveDateTime, Utc};
 
-use crate::{postgresql::dbuser::DbUser, encryption_modes::EncryptionModes};
+use crate::{postgresql::dbuser::DbUser, encryption_modes::EncryptionModes, TenetError};
 
 
 #[derive(Debug, Clone, serde_derive::Serialize, serde_derive::Deserialize)]
@@ -37,6 +37,8 @@ impl From<&DbUser> for User {
     }
 }
 
+
+
 impl User {
     pub fn new(username: String, full_name: String, password: String, encryption_mode: EncryptionModes, email: String, email_verified: bool, tenant_id: uuid::Uuid) -> Self {
         User {
@@ -51,6 +53,20 @@ impl User {
             updated_at: None,
             db_tenant_id: Some(tenant_id)
         }
+    }
+
+
+    /// Überprüft, ob ein bereitgestelltes Passwort mit dem gespeicherten Hash übereinstimmt
+    ///
+    /// # Parameter
+    ///
+    /// * `password` - Das zu überprüfende Passwort im Klartext
+    ///
+    /// # Rückgabe
+    ///
+    /// * `true` wenn das Passwort übereinstimmt, andernfalls `false`
+    pub fn verify_password(&self, password: &str) -> Result<bool, TenetError> {
+        Ok(argon2::verify_encoded(&self.password, password.as_bytes())?)
     }
 }
 

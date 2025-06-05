@@ -194,4 +194,11 @@ impl Tenant {
         DbRole::delete(role_id)?;
         Ok(())
     }
+
+    pub fn get_roles_for_user(&self, user_id: uuid::Uuid) -> Result<Vec<Role>, TenetError> {
+        // Nutze die spezifische Methode, um die Rollen direkt zu finden
+        let user_roles = DbRole::find_by_user(self.id, user_id)?;
+
+        Ok(user_roles.iter().map(Role::from).collect())
+    }
 }

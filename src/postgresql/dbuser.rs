@@ -157,5 +157,4 @@ impl DbUser {
     pub fn verify_password(&self, password: &str) -> Result<bool, TenetError> {
         Ok(argon2::verify_encoded(&self.password, password.as_bytes())?)
     }
-
 }

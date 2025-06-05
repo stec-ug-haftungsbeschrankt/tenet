@@ -21,9 +21,9 @@ use std::{str::FromStr, fmt::Display};
 #[derive(Debug, Clone, Copy, serde_derive::Serialize, serde_derive::Deserialize, PartialEq, PartialOrd)]
 pub enum RoleType {
     /// Administrator role with comprehensive permissions
-    Administrator,
+    Administrator = 99,
     /// Standard user role with limited permissions
-    User
+    User = 50
 }
 
 impl FromStr for RoleType {
@@ -55,5 +55,64 @@ impl Display for RoleType {
     /// * `f` - The formatter
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_str_valid() {
+        // Test Administrator role
+        let admin = RoleType::from_str("Administrator");
+        assert!(admin.is_ok());
+        assert_eq!(admin.unwrap(), RoleType::Administrator);
+
+        // Test User role
+        let user = RoleType::from_str("User");
+        assert!(user.is_ok());
+        assert_eq!(user.unwrap(), RoleType::User);
+    }
+
+    #[test]
+    fn test_from_str_invalid() {
+        // Test invalid role name
+        let invalid = RoleType::from_str("Guest");
+        assert!(invalid.is_err());
+    }
+
+    #[test]
+    fn test_display() {
+        // Test display for Administrator
+        let admin = RoleType::Administrator;
+        assert_eq!(format!("{}", admin), "Administrator");
+
+        // Test display for User
+        let user = RoleType::User;
+        assert_eq!(format!("{}", user), "User");
+    }
+
+    #[test]
+    fn test_comparison() {
+        // Test ordering/comparison (Administrator should be > User)
+        assert!(RoleType::Administrator > RoleType::User);
+
+        // Test equality
+        assert_eq!(RoleType::Administrator, RoleType::Administrator);
+        assert_eq!(RoleType::User, RoleType::User);
+        assert_ne!(RoleType::Administrator, RoleType::User);
+    }
+
+    #[test]
+    fn test_serialization() {
+        // Test serialization
+        let admin = RoleType::Administrator;
+        let serialized = serde_json::to_string(&admin).unwrap();
+        assert_eq!(serialized, "\"Administrator\"");
+
+        // Test deserialization
+        let deserialized: RoleType = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized, RoleType::Administrator);
     }
 }
