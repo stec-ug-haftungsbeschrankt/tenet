@@ -22,5 +22,5 @@ jobs:
       run: cargo test --verbose
     #- name: Login on crates.io
     #  run: cargo login
-    - name: Publish to crates.io
-      run: cargo publish --token ${{ CRATES_IO_TOKEN }}
+    #- name: Publish to crates.io
+    #  run: cargo publish --token ${{ CRATES_IO_TOKEN }}
