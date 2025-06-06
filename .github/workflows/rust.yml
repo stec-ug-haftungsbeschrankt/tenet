@@ -18,6 +18,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose
+    - name: Install nextest
+      run: cargo install cargo-nextest --locked
     - name: Run tests
       run: cargo nextest run --verbose
     #- name: Login on crates.io
