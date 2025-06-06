@@ -1,11 +1,11 @@
 [package]
-name = "tenet"
+name = "stec_tenet"
 description = "User and Tenant management for Saas applications"
 authors = ["Stefan Schick <stefan.schick@stecug.de>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
 homepage = "https://stecug.de"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
