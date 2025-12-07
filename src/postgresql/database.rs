@@ -17,13 +17,18 @@ static POOL: OnceLock<Pool> = OnceLock::new();
 pub fn connection() -> Result<DbConnection, r2d2::Error> {
     let mutex = POOL.get_or_init(|| {       
         info!("Initializing Tenet Database");
+
         let connection_string = CONNECTION_STRING.get().expect("Unable to get connection string");
-        println!("Tadaaa {}", &connection_string);
+        info!("Tenet connection string: {}", &connection_string);
+
         let manager = ConnectionManager::<PgConnection>::new(connection_string);
         let pool = Pool::new(manager).expect("Failed to create db pool");
-        println!("Tadaaa");
+
+        info!("Running pending database migrations...");
         let mut connection = pool.get().expect("Failed to get db connection");
         connection.run_pending_migrations(MIGRATIONS).expect("Unable to run migrations");
+        info!("Database migrations completed");
+        
         pool
     });
     mutex.get()
