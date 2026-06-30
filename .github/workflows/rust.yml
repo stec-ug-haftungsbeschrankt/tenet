@@ -19,7 +19,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: cargo-bins/cargo-binstall@main
       - name: Install nextest
-        run: cargo binstall --no-confirm cargo-nextest
+        run: cargo binstall --no-confirm --force cargo-nextest
       - name: Build and run tests
         run: cargo nextest run --verbose
       - name: Publish to crates.io
