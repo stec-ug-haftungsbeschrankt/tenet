@@ -9,6 +9,7 @@ use diesel::{
 use diesel::prelude::*;
 
 use super::database;
+use super::database::Pool;
 use super::dbtenant::DbTenant;
 use crate::TenetError;
 use crate::schema::storages;
@@ -60,20 +61,20 @@ impl From<DbStorageMessage> for DbStorage {
 
 
 impl DbStorage {
-    pub fn find_all() -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_all(pool: &Pool) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let storages = storages::table.load::<DbStorage>(&mut connection)?;
         Ok(storages)
     }
 
-    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_tenant(pool: &Pool, id: Uuid) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let storages = storages::table.filter(storages::db_tenant_id.eq(id)).load(&mut connection)?;
         Ok(storages)
     }
 
-    pub fn find(tenant_id: uuid::Uuid, id: Uuid) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find(pool: &Pool, tenant_id: uuid::Uuid, id: Uuid) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let storage = storages::table
             .filter(storages::id.eq(id))
             .filter(storages::db_tenant_id.eq(tenant_id))
@@ -81,8 +82,8 @@ impl DbStorage {
         Ok(storage)
     }
 
-    pub fn create(storage: DbStorageMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn create(pool: &Pool, storage: DbStorageMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let new_storage = DbStorage::from(storage);
 
@@ -92,8 +93,8 @@ impl DbStorage {
         Ok(db_storage)
     }
 
-    pub fn update(id: Uuid, storage: DbStorageMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn update(pool: &Pool, id: Uuid, storage: DbStorageMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let updated_storage = diesel::update(storages::table)
             .filter(storages::id.eq(id))
@@ -102,8 +103,8 @@ impl DbStorage {
         Ok(updated_storage)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn delete(pool: &Pool, id: Uuid) -> Result<usize, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let result = diesel::delete(
             storages::table.filter(storages::id.eq(id))

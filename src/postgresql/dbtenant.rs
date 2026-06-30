@@ -12,6 +12,7 @@ use diesel::prelude::*;
 use crate::TenetError;
 use crate::schema::tenants;
 use super::database;
+use super::database::Pool;
 
 
 #[derive(Serialize, Deserialize, AsChangeset)]
@@ -44,26 +45,26 @@ impl From<DbTenantMessage> for DbTenant {
 
 
 impl DbTenant {
-    pub fn find_all() -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_all(pool: &Pool) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let tenants = tenants::table.load::<DbTenant>(&mut connection)?;
         Ok(tenants)
     }
 
-    pub fn find(id: Uuid) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find(pool: &Pool, id: Uuid) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let tenant = tenants::table.filter(tenants::id.eq(id)).first(&mut connection)?;
         Ok(tenant)
     }
 
-    pub fn find_by_title(title: String) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_title(pool: &Pool, title: String) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let tenant = tenants::table.filter(tenants::title.eq(title)).first(&mut connection)?;
         Ok(tenant)
     }
 
-    pub fn create(tenant: DbTenantMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn create(pool: &Pool, tenant: DbTenantMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let new_tenant = DbTenant::from(tenant);
 
@@ -73,8 +74,8 @@ impl DbTenant {
         Ok(db_tenant)
     }
 
-    pub fn update(id: Uuid, tenant: DbTenantMessage) -> Result<Self, TenetError> {
-        let mut conn = database::connection()?;
+    pub fn update(pool: &Pool, id: Uuid, tenant: DbTenantMessage) -> Result<Self, TenetError> {
+        let mut conn = database::connection(pool)?;
 
         let db_tenant = diesel::update(tenants::table)
             .filter(tenants::id.eq(id))
@@ -83,8 +84,8 @@ impl DbTenant {
         Ok(db_tenant)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn delete(pool: &Pool, id: Uuid) -> Result<usize, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let res = diesel::delete(
                 tenants::table.filter(tenants::id.eq(id))

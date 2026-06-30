@@ -9,6 +9,7 @@ use diesel::{
 use diesel::prelude::*;
 
 use super::database;
+use super::database::Pool;
 use super::dbtenant::DbTenant;
 use crate::TenetError;
 use crate::schema::applications;
@@ -53,20 +54,20 @@ impl From<DbApplicationMessage> for DbApplication {
 
 
 impl DbApplication {
-    pub fn find_all() -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_all(pool: &Pool) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let applications = applications::table.load::<DbApplication>(&mut connection)?;
         Ok(applications)
     }
 
-    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_tenant(pool: &Pool, id: Uuid) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let applications = applications::table.filter(applications::db_tenant_id.eq(id)).load(&mut connection)?;
         Ok(applications)
     }
 
-    pub fn find(tenant_id: uuid::Uuid, application_id: Uuid) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find(pool: &Pool, tenant_id: uuid::Uuid, application_id: Uuid) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let application = applications::table
             .filter(applications::id.eq(application_id))
             .filter(applications::db_tenant_id.eq(tenant_id))
@@ -74,8 +75,8 @@ impl DbApplication {
         Ok(application)
     }
 
-    pub fn create(application: DbApplicationMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn create(pool: &Pool, application: DbApplicationMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let new_application = DbApplication::from(application);
 
@@ -85,8 +86,8 @@ impl DbApplication {
         Ok(db_application)
     }
 
-    pub fn update(id: Uuid, application: DbApplicationMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn update(pool: &Pool, id: Uuid, application: DbApplicationMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let updated_application = diesel::update(applications::table)
             .filter(applications::id.eq(id))
@@ -95,8 +96,8 @@ impl DbApplication {
         Ok(updated_application)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn delete(pool: &Pool, id: Uuid) -> Result<usize, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let result = diesel::delete(
             applications::table.filter(applications::id.eq(id))
