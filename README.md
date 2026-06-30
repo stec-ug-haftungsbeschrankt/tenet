@@ -73,6 +73,11 @@ let user = User::new(
 let created_user = tenant.add_user(&user).unwrap();
 ```
 
+Each `Tenet::new()` call builds its own independent database connection pool from
+the connection string it is given. Creating multiple `Tenet` instances - even
+with different connection strings, e.g. one per test - is safe: they do not
+share state and do not interfere with one another.
+
 ## Testing
 
 We use unit/integration tests. In order to run them you need `docker` running and have `cargo-nextest` installed. You can do this with:

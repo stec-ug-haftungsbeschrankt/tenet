@@ -53,9 +53,8 @@ mod user;
 mod schema;
 mod postgresql;
 
-use std::sync::OnceLock;
 use log::info;
-use postgresql::{dbtenant::{DbTenant, DbTenantMessage}, dbuser::DbUser};
+use postgresql::{database::Pool, dbtenant::{DbTenant, DbTenantMessage}, dbuser::DbUser};
 use uuid::Uuid;
 
 pub use application::*;
@@ -67,13 +66,16 @@ pub use user::*;
 
 /// Default database URL used when no connection string is provided.
 pub static DEFAULT_DATABASE_URL: &str = "postgres://postgres:@localhost/stec_tenet";
-/// Stores the connection string for the database connection.
-static CONNECTION_STRING: OnceLock<String> = OnceLock::new();
 
 /// Main structure for interacting with the Tenet system.
 ///
 /// This structure is the primary entry point for working with the Tenet library.
 /// It manages the database connection and provides methods for managing tenants.
+///
+/// Each `Tenet` instance owns its own connection pool, built from the connection
+/// string it was constructed with. Creating multiple `Tenet` instances - even with
+/// different connection strings, e.g. one per test - is safe: each instance talks
+/// to its own database independently and instances do not interfere with each other.
 ///
 /// # Example
 ///
@@ -87,14 +89,21 @@ static CONNECTION_STRING: OnceLock<String> = OnceLock::new();
 /// let tenant = tenet.create_tenant("My Company".to_string()).unwrap();
 /// ```
 #[derive(Debug, Clone)]
-pub struct Tenet { }
+pub struct Tenet {
+    pool: Pool
+}
 
-
-unsafe impl Send for Tenet {}
-unsafe impl Sync for Tenet {}
 
 impl Tenet {
     /// Creates a new Tenet instance with the specified database connection.
+    ///
+    /// Each call builds and returns a fresh, independent connection pool for the
+    /// given connection string and runs any pending migrations against it. This
+    /// is in contrast to versions prior to the fix for
+    /// [issue #7](https://github.com/stec-ug-haftungsbeschrankt/tenet/issues/7), where the
+    /// connection string and pool were stored in process-wide statics: only the
+    /// first `Tenet::new()` call in a process took effect, and later calls with a
+    /// different connection string silently kept using the first pool.
     ///
     /// # Parameters
     ///
@@ -108,7 +117,7 @@ impl Tenet {
     ///
     /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
     /// ```
-    pub fn new(connection_string: String) -> Self {     
+    pub fn new(connection_string: String) -> Self {
         let database_url = if connection_string.is_empty() {
             info!("Database url not set, using default ConnectionString");
             DEFAULT_DATABASE_URL.to_string()
@@ -116,12 +125,9 @@ impl Tenet {
             connection_string
         };
 
-        if let Err(e) = CONNECTION_STRING.set(database_url) {
-            println!("ConnectionString {}", e);
-        }
+        let pool = postgresql::database::build_pool(&database_url);
 
-        //initialize_database();
-        Tenet { }
+        Tenet { pool }
     }
 
     /// Returns a list of all tenant IDs.
@@ -139,7 +145,7 @@ impl Tenet {
     /// let tenant_ids = tenet.get_tenant_ids();
     /// ```
     pub fn get_tenant_ids(&self) -> Vec<Uuid> {
-        if let Ok(tenants) = DbTenant::find_all() {
+        if let Ok(tenants) = DbTenant::find_all(&self.pool) {
             return tenants.iter().map(|t| t.id).collect();
         }
         Vec::new()
@@ -159,8 +165,8 @@ impl Tenet {
     ///
     /// Returns a `TenetError::NotFoundError` if the user or tenant is not found.
     pub fn get_tenant_id_by_username(&self, username: String) -> Result<uuid::Uuid, TenetError> {
-        let user = DbUser::find_by_email(username).unwrap();
-        if let Ok(tenant) = DbTenant::find(user.db_tenant_id.unwrap()) {
+        let user = DbUser::find_by_email(&self.pool, username).unwrap();
+        if let Ok(tenant) = DbTenant::find(&self.pool, user.db_tenant_id.unwrap()) {
             return Ok(tenant.id);
         }
 
@@ -181,9 +187,9 @@ impl Tenet {
     ///
     /// Returns a `TenetError::NotFoundError` if the user or tenant is not found.
     pub fn get_tenant_by_username(&self, username: String) -> Result<Tenant, TenetError> {
-        let user = DbUser::find_by_email(username).unwrap();
-        if let Ok(tenant) = DbTenant::find(user.db_tenant_id.unwrap()) {
-            return Ok(Tenant::from(&tenant));
+        let user = DbUser::find_by_email(&self.pool, username).unwrap();
+        if let Ok(tenant) = DbTenant::find(&self.pool, user.db_tenant_id.unwrap()) {
+            return Ok(Tenant::from_db(&tenant, self.pool.clone()));
         }
 
         Err(TenetError::NotFoundError)
@@ -199,8 +205,8 @@ impl Tenet {
     ///
     /// An `Option<Tenant>` containing the tenant if found, otherwise `None`.
     pub fn get_tenant_by_id(&self, tenant_id: uuid::Uuid) -> Option<Tenant> {
-        if let Ok(db_tenant) = DbTenant::find(tenant_id) {
-            return Some(Tenant::from(&db_tenant));
+        if let Ok(db_tenant) = DbTenant::find(&self.pool, tenant_id) {
+            return Some(Tenant::from_db(&db_tenant, self.pool.clone()));
         }
         None
     }
@@ -224,9 +230,9 @@ impl Tenet {
             title
         };
         
-        let updated_tenant = DbTenant::update(tenant_id, tenant_message)?;
+        let updated_tenant = DbTenant::update(&self.pool, tenant_id, tenant_message)?;
 
-        Ok(Tenant::from(&updated_tenant))
+        Ok(Tenant::from_db(&updated_tenant, self.pool.clone()))
     }
 
     /// Creates a new tenant.
@@ -255,9 +261,9 @@ impl Tenet {
         let tenant_message = DbTenantMessage {
             title
         };
-        let created_tenant = DbTenant::create(tenant_message)?;
+        let created_tenant = DbTenant::create(&self.pool, tenant_message)?;
 
-        Ok(Tenant::from(&created_tenant))
+        Ok(Tenant::from_db(&created_tenant, self.pool.clone()))
     }
 
     /// Deletes a tenant by its ID.
@@ -274,7 +280,7 @@ impl Tenet {
     ///
     /// Returns a `TenetError` if the deletion fails.
     pub fn delete_tenant(&self, tenant_id: uuid::Uuid) -> Result<(), TenetError> {
-        DbTenant::delete(tenant_id)?;
+        DbTenant::delete(&self.pool, tenant_id)?;
         Ok(())
     }
 }
@@ -301,6 +307,52 @@ mod tests {
         //node.rm();
     }
     
+    /// Regression test for https://github.com/stec-ug-haftungsbeschrankt/tenet/issues/7
+    ///
+    /// Previously, `Tenet::new()` stored its connection string and connection pool in
+    /// process-wide `OnceLock` statics, so only the *first* `Tenet::new()` call in a
+    /// process actually took effect. A second `Tenet::new()` call with a different
+    /// connection string would silently keep using the first instance's pool, and
+    /// stopping the first container (as this test does, mid-test) would break all
+    /// later usage in the process - even of `Tenet` instances built from a perfectly
+    /// valid, still-running connection string.
+    #[test]
+    fn multiple_tenet_instances_use_independent_pools_test() {
+        let node_a = Postgres::default().start().expect("Unable to start container A");
+        let host_a = node_a.get_host().unwrap();
+        let port_a = node_a.get_host_port_ipv4(5432).unwrap();
+        let connection_string_a = format!("postgres://postgres:postgres@{}:{}/postgres", host_a, port_a);
+
+        let node_b = Postgres::default().start().expect("Unable to start container B");
+        let host_b = node_b.get_host().unwrap();
+        let port_b = node_b.get_host_port_ipv4(5432).unwrap();
+        let connection_string_b = format!("postgres://postgres:postgres@{}:{}/postgres", host_b, port_b);
+
+        // Create the first Tenet instance and a tenant in its database.
+        let tenet_a = Tenet::new(connection_string_a);
+        let tenant_a = tenet_a.create_tenant("Tenant A".to_string()).unwrap();
+
+        // Creating a second Tenet instance against a *different* database must not
+        // silently reuse the first instance's connection string/pool.
+        let tenet_b = Tenet::new(connection_string_b);
+        let tenant_b = tenet_b.create_tenant("Tenant B".to_string()).unwrap();
+
+        // Each instance only sees the tenant created through itself.
+        assert!(tenet_a.get_tenant_by_id(tenant_a.id).is_some());
+        assert!(tenet_a.get_tenant_by_id(tenant_b.id).is_none());
+        assert!(tenet_b.get_tenant_by_id(tenant_b.id).is_some());
+        assert!(tenet_b.get_tenant_by_id(tenant_a.id).is_none());
+
+        // Stopping the first container must not affect the second, still-running,
+        // Tenet instance - this used to fail because both shared a single global pool.
+        node_a.stop().expect("Failed to stop postgres container A");
+
+        let reloaded_tenant_b = tenet_b.get_tenant_by_id(tenant_b.id).unwrap();
+        assert_eq!(tenant_b.title, reloaded_tenant_b.title);
+
+        node_b.stop().expect("Failed to stop postgres container B");
+    }
+
     #[test]
     fn create_tenant_test() {
         test_harness(|connection_string| {

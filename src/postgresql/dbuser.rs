@@ -11,6 +11,7 @@ use argon2::Config;
 use rand::Rng;
 
 use super::database;
+use super::database::Pool;
 use super::dbtenant::DbTenant;
 use crate::TenetError;
 use crate::schema::users;
@@ -79,14 +80,14 @@ impl From<DbUser> for DbUserMessage {
 
 
 impl DbUser {
-    pub fn find_by_tenant(tenant_id: Uuid) -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_tenant(pool: &Pool, tenant_id: Uuid) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let users = users::table.filter(users::db_tenant_id.eq(tenant_id)).load(&mut connection)?;
         Ok(users)
     }
 
-    pub fn find(tenant_id: uuid::Uuid, user_id: Uuid) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find(pool: &Pool, tenant_id: uuid::Uuid, user_id: Uuid) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let user = users::table
             .filter(users::id.eq(user_id))
             .filter(users::db_tenant_id.eq(tenant_id))
@@ -94,16 +95,16 @@ impl DbUser {
         Ok(user)
     }
 
-    pub fn find_by_email(email: String) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_email(pool: &Pool, email: String) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let user = users::table
             .filter(users::email.eq(email))
             .first(&mut connection)?;
         Ok(user)
     }
 
-    pub fn find_by_tenant_and_email(tenant_id: uuid::Uuid, email: String) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_tenant_and_email(pool: &Pool, tenant_id: uuid::Uuid, email: String) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let user = users::table
             .filter(users::db_tenant_id.eq(tenant_id))
             .filter(users::email.eq(email))
@@ -111,8 +112,8 @@ impl DbUser {
         Ok(user)
     }
 
-    pub fn create(user: DbUserMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn create(pool: &Pool, user: DbUserMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let mut new_user = DbUser::from(user);
         new_user.hash_password()?;
@@ -123,8 +124,8 @@ impl DbUser {
         Ok(db_user)
     }
 
-    pub fn update(id: Uuid, user: DbUserMessage) -> Result<Self, TenetError> {
-        let mut conn = database::connection()?;
+    pub fn update(pool: &Pool, id: Uuid, user: DbUserMessage) -> Result<Self, TenetError> {
+        let mut conn = database::connection(pool)?;
 
         let user = diesel::update(users::table)
             .filter(users::id.eq(id))
@@ -133,8 +134,8 @@ impl DbUser {
         Ok(user)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
-        let mut conn = database::connection()?;
+    pub fn delete(pool: &Pool, id: Uuid) -> Result<usize, TenetError> {
+        let mut conn = database::connection(pool)?;
 
         let res = diesel::delete(
             users::table.filter(users::id.eq(id))

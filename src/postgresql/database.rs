@@ -1,35 +1,38 @@
 use diesel::PgConnection;
 use diesel::r2d2::ConnectionManager;
 use log::info;
-use std::sync::OnceLock;
 
 use diesel_migrations::EmbeddedMigrations;
 use crate::diesel_migrations::MigrationHarness;
-use crate::CONNECTION_STRING;
 
-type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+/// Connection pool type backing a [`crate::Tenet`] instance.
+///
+/// Each `Tenet` owns its own `Pool`, built from the connection string it was
+/// constructed with. This is cheap to clone (it's an `Arc` internally), so
+/// multiple `Tenet` instances pointing at different databases can coexist in
+/// the same process without interfering with one another.
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type DbConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
-static POOL: OnceLock<Pool> = OnceLock::new();
+/// Builds a new connection pool for the given connection string and runs
+/// any pending migrations against it.
+pub fn build_pool(connection_string: &str) -> Pool {
+    info!("Initializing Tenet Database");
+    info!("Tenet connection string: {}", connection_string);
 
-pub fn connection() -> Result<DbConnection, r2d2::Error> {
-    let mutex = POOL.get_or_init(|| {       
-        info!("Initializing Tenet Database");
+    let manager = ConnectionManager::<PgConnection>::new(connection_string);
+    let pool = Pool::new(manager).expect("Failed to create db pool");
 
-        let connection_string = CONNECTION_STRING.get().expect("Unable to get connection string");
-        info!("Tenet connection string: {}", &connection_string);
+    info!("Running pending database migrations...");
+    let mut connection = pool.get().expect("Failed to get db connection");
+    connection.run_pending_migrations(MIGRATIONS).expect("Unable to run migrations");
+    info!("Database migrations completed");
 
-        let manager = ConnectionManager::<PgConnection>::new(connection_string);
-        let pool = Pool::new(manager).expect("Failed to create db pool");
+    pool
+}
 
-        info!("Running pending database migrations...");
-        let mut connection = pool.get().expect("Failed to get db connection");
-        connection.run_pending_migrations(MIGRATIONS).expect("Unable to run migrations");
-        info!("Database migrations completed");
-        
-        pool
-    });
-    mutex.get()
+pub fn connection(pool: &Pool) -> Result<DbConnection, r2d2::Error> {
+    pool.get()
 }

@@ -9,6 +9,7 @@ use diesel::{
 use diesel::prelude::*;
 
 use super::database;
+use super::database::Pool;
 use super::dbtenant::DbTenant;
 use crate::TenetError;
 use crate::schema::roles;
@@ -57,20 +58,20 @@ impl From<DbRoleMessage> for DbRole {
 
 
 impl DbRole {
-    pub fn find_all() -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_all(pool: &Pool) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let roles = roles::table.load::<DbRole>(&mut connection)?;
         Ok(roles)
     }
 
-    pub fn find_by_tenant(id: Uuid) -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_tenant(pool: &Pool, id: Uuid) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let roles = roles::table.filter(roles::db_tenant_id.eq(id)).load(&mut connection)?;
         Ok(roles)
     }
 
-    pub fn find_by_user(tenant_id: Uuid, user_id: Uuid) -> Result<Vec<Self>, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find_by_user(pool: &Pool, tenant_id: Uuid, user_id: Uuid) -> Result<Vec<Self>, TenetError> {
+        let mut connection = database::connection(pool)?;
         let roles = roles::table
             .filter(roles::db_tenant_id.eq(tenant_id))
             .filter(roles::user_id.eq(user_id))
@@ -78,8 +79,8 @@ impl DbRole {
         Ok(roles)
     }
 
-    pub fn find(tenant_id: uuid::Uuid, id: Uuid) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn find(pool: &Pool, tenant_id: uuid::Uuid, id: Uuid) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
         let role = roles::table
             .filter(roles::id.eq(id))
             .filter(roles::db_tenant_id.eq(tenant_id))
@@ -87,8 +88,8 @@ impl DbRole {
         Ok(role)
     }
 
-    pub fn create(role: DbRoleMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn create(pool: &Pool, role: DbRoleMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let new_role = DbRole::from(role);
 
@@ -98,8 +99,8 @@ impl DbRole {
         Ok(db_role)
     }
 
-    pub fn update(id: Uuid, role: DbRoleMessage) -> Result<Self, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn update(pool: &Pool, id: Uuid, role: DbRoleMessage) -> Result<Self, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let updated_role = diesel::update(roles::table)
             .filter(roles::id.eq(id))
@@ -108,8 +109,8 @@ impl DbRole {
         Ok(updated_role)
     }
 
-    pub fn delete(id: Uuid) -> Result<usize, TenetError> {
-        let mut connection = database::connection()?;
+    pub fn delete(pool: &Pool, id: Uuid) -> Result<usize, TenetError> {
+        let mut connection = database::connection(pool)?;
 
         let result = diesel::delete(
             roles::table.filter(roles::id.eq(id))
