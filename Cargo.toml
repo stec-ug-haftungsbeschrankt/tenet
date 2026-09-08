@@ -3,34 +3,34 @@ name = "stec_tenet"
 description = "User and Tenant management for Saas applications"
 authors = ["Stefan Schick <stefan.schick@stecug.de>"]
 license = "GPL-3.0-or-later"
-readme = "README.md"
+#readme = "README.md"
 homepage = "https://stecug.de"
 repository = "https://github.com/stec-ug-haftungsbeschrankt/tenet/"
-version = "0.3.3"
+version = "0.3.5"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "2.0.17"
-uuid = { version = "1.19.0", features = ["v4", "serde"] }
-chrono = { version = "0.4.42", features = ["serde"] }
+thiserror = "2.0.20"
+uuid = { version = "1.26.0", features = ["v4", "serde"] }
+chrono = { version = "0.4.45", features = ["serde"] }
 
-serde = "1.0.228"
-serde_json = "1.0.145"
-serde_derive = "1.0.228"
+serde = "1.0.229"
+serde_json = "1.0.151"
+serde_derive = "1.0.229"
 
 r2d2 = "0.8.10"
 
-diesel = { version = "2.3.4", features = ["postgres", "r2d2", "uuid", "chrono"] }
-diesel_migrations = "2.3.1"
+diesel = { version = "2.3.13", features = ["postgres", "r2d2", "uuid", "chrono"] }
+diesel_migrations = "2.3.2"
 
-rand = "0.9.2"
+rand = "0.10.2"
 rust-argon2 = "3.0.0"
 
-log = "0.4.29"
-simple_logger = "5.0.0"
+log = "0.4.34"
+simple_logger = "5.2.0"
 
 
 [dev-dependencies]
-testcontainers-modules = { version = "0.12.1", features = ["postgres", "blocking"] }
+testcontainers-modules = { version = "0.15.0", features = ["postgres", "blocking"] }

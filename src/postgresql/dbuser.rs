@@ -8,7 +8,7 @@ use diesel::{
 };
 use diesel::prelude::*;
 use argon2::Config;
-use rand::Rng;
+use rand::RngExt;
 
 use super::database;
 use super::database::Pool;
