@@ -52,7 +52,7 @@ The following encryption method is used for passwords:
 ## Example
 
 ```rust
-use tenet::{Tenet, User, encryption_modes::EncryptionModes};
+use stec_tenet::{Tenet, User, encryption_modes::EncryptionModes};
 
 // Initialize Tenet with a database connection
 let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());

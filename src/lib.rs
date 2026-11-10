@@ -11,8 +11,8 @@
 //!
 //! ## Examples
 //!
-//! ```
-//! use tenet::{Tenet, Tenant, User, encryption_modes::EncryptionModes};
+//! ```no_run
+//! use stec_tenet::{Tenet, Tenant, User, encryption_modes::EncryptionModes};
 //!
 //! // Initialize the Tenet instance with a database connection
 //! let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
@@ -79,8 +79,8 @@ pub static DEFAULT_DATABASE_URL: &str = "postgres://postgres:@localhost/stec_ten
 ///
 /// # Example
 ///
-/// ```
-/// use tenet::Tenet;
+/// ```no_run
+/// use stec_tenet::Tenet;
 ///
 /// // Initialize Tenet with a custom database connection
 /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
@@ -121,8 +121,8 @@ impl Tenet {
     ///
     /// # Example
     ///
-    /// ```
-    /// use tenet::Tenet;
+    /// ```no_run
+    /// use stec_tenet::Tenet;
     ///
     /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
     /// ```
@@ -166,8 +166,8 @@ impl Tenet {
     ///
     /// # Example
     ///
-    /// ```
-    /// use tenet::Tenet;
+    /// ```no_run
+    /// use stec_tenet::Tenet;
     ///
     /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
     /// let tenant_ids = tenet.get_tenant_ids();
@@ -279,8 +279,8 @@ impl Tenet {
     ///
     /// # Example
     ///
-    /// ```
-    /// use tenet::Tenet;
+    /// ```no_run
+    /// use stec_tenet::Tenet;
     ///
     /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
     /// let tenant = tenet.create_tenant("My Company".to_string()).unwrap();

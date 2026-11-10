@@ -8,7 +8,7 @@ use std::{str::FromStr, fmt::Display};
 /// # Example
 ///
 /// ```
-/// use tenet::role_type::RoleType;
+/// use stec_tenet::role_type::RoleType;
 /// use std::str::FromStr;
 ///
 /// let admin_role = RoleType::Administrator;
