@@ -26,6 +26,10 @@ pub enum TenetError {
     #[error("Password hashing Error")]
     PasswordHashingError(#[from] argon2::Error),
     
+    /// Running the embedded database migrations failed
+    #[error("Database migration failed: {0}")]
+    MigrationError(String),
+
     /// The requested resource was not found
     #[error("Not found")]
     NotFoundError,

@@ -78,6 +78,12 @@ the connection string it is given. Creating multiple `Tenet` instances - even
 with different connection strings, e.g. one per test - is safe: they do not
 share state and do not interfere with one another.
 
+Migrations run under a Postgres advisory lock, so many instances (threads,
+processes or pods) can start at the same time against a fresh or freshly
+upgraded database. `Tenet::new()` panics on failure; use `Tenet::try_new()` to
+get a `Result<Tenet, TenetError>` instead. The connection string is logged with
+its credentials redacted.
+
 ## Testing
 
 We use unit/integration tests. In order to run them you need `docker` running and have `cargo-nextest` installed. You can do this with:
