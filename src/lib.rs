@@ -11,8 +11,8 @@
 //!
 //! ## Examples
 //!
-//! ```
-//! use tenet::{Tenet, Tenant, User, encryption_modes::EncryptionModes};
+//! ```no_run
+//! use stec_tenet::{Tenet, Tenant, User, encryption_modes::EncryptionModes};
 //!
 //! // Initialize the Tenet instance with a database connection
 //! let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
@@ -79,8 +79,8 @@ pub static DEFAULT_DATABASE_URL: &str = "postgres://postgres:@localhost/stec_ten
 ///
 /// # Example
 ///
-/// ```
-/// use tenet::Tenet;
+/// ```no_run
+/// use stec_tenet::Tenet;
 ///
 /// // Initialize Tenet with a custom database connection
 /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
@@ -110,14 +110,42 @@ impl Tenet {
     /// * `connection_string` - The connection string for the database.
     ///   If empty, the default URL will be used.
     ///
+    /// Migrations are serialised with a Postgres advisory lock, so many `Tenet`
+    /// instances (threads, processes or pods) may be created concurrently against
+    /// the same, not yet migrated database.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the pool cannot be created, no connection can be obtained or the
+    /// migrations fail. Use [`Tenet::try_new`] to handle these errors instead.
+    ///
     /// # Example
     ///
-    /// ```
-    /// use tenet::Tenet;
+    /// ```no_run
+    /// use stec_tenet::Tenet;
     ///
     /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
     /// ```
     pub fn new(connection_string: String) -> Self {
+        Self::try_new(connection_string).expect("Unable to initialize Tenet")
+    }
+
+    /// Fallible variant of [`Tenet::new`].
+    ///
+    /// Returns a [`TenetError`] instead of panicking when the pool cannot be
+    /// created, the database is unreachable or the migrations fail.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use stec_tenet::Tenet;
+    ///
+    /// match Tenet::try_new("postgres://user:password@localhost/mydb".to_string()) {
+    ///     Ok(tenet) => { let _ = tenet.get_tenant_ids(); }
+    ///     Err(e) => eprintln!("Tenet unavailable: {e}"),
+    /// }
+    /// ```
+    pub fn try_new(connection_string: String) -> Result<Self, TenetError> {
         let database_url = if connection_string.is_empty() {
             info!("Database url not set, using default ConnectionString");
             DEFAULT_DATABASE_URL.to_string()
@@ -125,9 +153,9 @@ impl Tenet {
             connection_string
         };
 
-        let pool = postgresql::database::build_pool(&database_url);
+        let pool = postgresql::database::build_pool(&database_url)?;
 
-        Tenet { pool }
+        Ok(Tenet { pool })
     }
 
     /// Returns a list of all tenant IDs.
@@ -138,8 +166,8 @@ impl Tenet {
     ///
     /// # Example
     ///
-    /// ```
-    /// use tenet::Tenet;
+    /// ```no_run
+    /// use stec_tenet::Tenet;
     ///
     /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
     /// let tenant_ids = tenet.get_tenant_ids();
@@ -251,8 +279,8 @@ impl Tenet {
     ///
     /// # Example
     ///
-    /// ```
-    /// use tenet::Tenet;
+    /// ```no_run
+    /// use stec_tenet::Tenet;
     ///
     /// let tenet = Tenet::new("postgres://user:password@localhost/mydb".to_string());
     /// let tenant = tenet.create_tenant("My Company".to_string()).unwrap();
@@ -351,6 +379,32 @@ mod tests {
         assert_eq!(tenant_b.title, reloaded_tenant_b.title);
 
         node_b.stop().expect("Failed to stop postgres container B");
+    }
+
+    /// Regression test for https://github.com/stec-ug-haftungsbeschrankt/tenet/issues/11
+    ///
+    /// Many `Tenet` instances created at once against the same fresh database
+    /// used to race in `run_pending_migrations` and panic.
+    #[test]
+    fn concurrent_tenet_new_on_fresh_database_test() {
+        test_harness(|connection_string| {
+            let handles: Vec<_> = (0..8)
+                .map(|_| {
+                    let url = connection_string.clone();
+                    std::thread::spawn(move || Tenet::try_new(url).map(|_| ()))
+                })
+                .collect();
+
+            for handle in handles {
+                handle.join().expect("thread panicked").expect("Tenet::try_new failed");
+            }
+        });
+    }
+
+    #[test]
+    fn try_new_returns_error_for_unreachable_database_test() {
+        let result = Tenet::try_new("postgres://postgres:secret@127.0.0.1:1/postgres?connect_timeout=1".to_string());
+        assert!(result.is_err());
     }
 
     #[test]
